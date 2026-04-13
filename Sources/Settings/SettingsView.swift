@@ -5,6 +5,7 @@ struct SettingsView: View {
     @State private var selectedTab: Tab = .status
     @State private var selectedRuleId: UUID?
     @ObservedObject private var offWork = OffWorkState.shared
+    @State private var showAppSettings = false
 
     enum Tab: String, CaseIterable {
         case status = "当前状态"
@@ -36,8 +37,18 @@ struct SettingsView: View {
                 .frame(width: 220)
             }
 
-            // Off-work button — right side
+            // Right side buttons
             ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    showAppSettings = true
+                } label: {
+                    Label("系统设置", systemImage: "gearshape.2")
+                }
+                .help("配置密码等系统选项")
+                .sheet(isPresented: $showAppSettings) {
+                    AppSettingsView()
+                }
+
                 offWorkButton
                 if selectedTab == .rules {
                     Button {

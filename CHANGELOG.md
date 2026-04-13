@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-04-13
+
+### Added
+- 系统设置面板（工具栏新增「系统设置」按钮，以 Sheet 弹出）
+- 下班黑幕退出密码保护：在系统设置中配置密码，Esc 时需验证身份
+- 未设置密码则无需输入，与原有行为兼容
+
 ## [1.6.0] - 2026-04-13
 
 ### Added

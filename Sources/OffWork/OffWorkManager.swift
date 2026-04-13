@@ -31,14 +31,16 @@ class OffWorkManager {
 
     // MARK: - Exit Off-Work Mode
 
-    func exit(restore: Bool) {
+    /// Exit off-work mode. If `skipPasswordCheck` is false and a password is configured, verifies first.
+    func exit(restore: Bool, skipPasswordCheck: Bool = false) {
         guard isActive else { return }
-        tearDown()
 
-        if restore {
-            restoreRules()
+        if !skipPasswordCheck && AppSettings.shared.hasPassword {
+            guard verifyPassword() else { return }
         }
 
+        tearDown()
+        if restore { restoreRules() }
         isActive = false
         OffWorkState.shared.update(false)
     }
@@ -121,8 +123,37 @@ class OffWorkManager {
     }
 
     private func handleEscape() {
-        tearDown()
+        // Password check if configured
+        if AppSettings.shared.hasPassword {
+            guard verifyPassword() else { return } // wrong password or cancelled → stay black
+        }
 
+        tearDown()
+        askRestoreRules()
+
+        isActive = false
+        OffWorkState.shared.update(false)
+    }
+
+    /// Returns true if password matches or user entered correctly.
+    private func verifyPassword() -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "解锁下班模式"
+        alert.informativeText = "请输入退出密码"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "确定")
+        alert.addButton(withTitle: "取消")
+
+        let input = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+        input.placeholderString = "输入密码"
+        alert.accessoryView = input
+
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else { return false }
+        return input.stringValue == AppSettings.shared.offWorkPassword
+    }
+
+    private func askRestoreRules() {
         let alert = NSAlert()
         alert.messageText = "下班模式结束"
         alert.informativeText = "是否恢复工作提醒计时？"
@@ -133,14 +164,10 @@ class OffWorkManager {
         let response = alert.runModal()
         restoreRules()
         if response != .alertFirstButtonReturn {
-            // User chose "保持暂停" — re-disable rules after restore
             for i in RulesStore.shared.rules.indices {
                 RulesStore.shared.rules[i].isEnabled = false
             }
         }
-
-        isActive = false
-        OffWorkState.shared.update(false)
     }
 
     private func tearDown() {
