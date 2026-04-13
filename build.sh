@@ -8,6 +8,7 @@ BINARY_DIR="${APP_DIR}/Contents/MacOS"
 RESOURCES_DIR="${APP_DIR}/Contents/Resources"
 
 echo "▶ Building ${APP_NAME}..."
+swift package clean
 swift build -c release 2>&1
 
 echo "▶ Creating .app bundle..."
