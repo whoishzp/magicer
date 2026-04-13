@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct AppSettingsView: View {
+    var embedded: Bool = false
+
     @ObservedObject private var settings = AppSettings.shared
     @State private var newPassword: String = ""
     @State private var confirmPassword: String = ""
@@ -11,27 +13,24 @@ struct AppSettingsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header
-            HStack {
-                Image(systemName: "gearshape.2.fill")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("系统设置")
-                        .font(.headline)
-                    Text("WorkStop 应用配置")
-                        .font(.caption)
+            if !embedded {
+                // Header (only shown when presented as sheet)
+                HStack {
+                    Image(systemName: "gearshape.2.fill")
+                        .font(.title2)
                         .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("系统设置").font(.headline)
+                        Text("WorkStop 应用配置").font(.caption).foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Button("完成") { dismiss() }
+                        .buttonStyle(.bordered).controlSize(.small)
                 }
-                Spacer()
-                Button("完成") { dismiss() }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
+                Divider()
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
-
-            Divider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
@@ -108,7 +107,8 @@ struct AppSettingsView: View {
                 .padding(20)
             }
         }
-        .frame(width: 440, height: 360)
+        .frame(minWidth: embedded ? 0 : 440, minHeight: embedded ? 0 : 360)
+        .frame(maxWidth: embedded ? .infinity : 440, maxHeight: embedded ? .infinity : 360)
     }
 
     // MARK: - Actions

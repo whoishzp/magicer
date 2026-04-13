@@ -5,28 +5,36 @@ struct SettingsView: View {
     @State private var selectedTab: Tab = .status
     @State private var selectedRuleId: UUID?
     @ObservedObject private var offWork = OffWorkState.shared
-    @State private var showAppSettings = false
 
     enum Tab: String, CaseIterable {
-        case status = "当前状态"
-        case rules  = "规则配置"
+        case status     = "当前状态"
+        case rules      = "规则配置"
+        case appSettings = "系统设置"
         var icon: String {
             switch self {
-            case .status: return "chart.bar.fill"
-            case .rules:  return "gearshape.fill"
+            case .status:      return "chart.bar.fill"
+            case .rules:       return "gearshape.fill"
+            case .appSettings: return "gearshape.2.fill"
             }
         }
     }
 
     var body: some View {
-        NavigationSplitView(columnVisibility: .constant(.all)) {
-            sidebar
-        } detail: {
-            detail
+        Group {
+            if selectedTab == .appSettings {
+                AppSettingsView(embedded: true)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                NavigationSplitView(columnVisibility: .constant(.all)) {
+                    sidebar
+                } detail: {
+                    detail
+                }
+            }
         }
         .frame(minWidth: 640, minHeight: 480)
         .toolbar {
-            // Tab switcher — left side
+            // Tab switcher — left / navigation area
             ToolbarItem(placement: .navigation) {
                 Picker("", selection: $selectedTab) {
                     ForEach(Tab.allCases, id: \.self) { tab in
@@ -34,22 +42,11 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 220)
+                .frame(width: 300)
             }
 
-            // Right side buttons
+            // Right-side buttons
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    showAppSettings = true
-                } label: {
-                    Label("系统设置", systemImage: "gearshape.2")
-                }
-                .help("配置密码等系统选项")
-                .sheet(isPresented: $showAppSettings) {
-                    AppSettingsView()
-                }
-
-                offWorkButton
                 if selectedTab == .rules {
                     Button {
                         store.addRule()
@@ -58,6 +55,7 @@ struct SettingsView: View {
                         Label("新增规则", systemImage: "plus")
                     }
                 }
+                offWorkButton
             }
         }
         .navigationTitle("WorkStop")
@@ -71,15 +69,18 @@ struct SettingsView: View {
                 Button {
                     OffWorkManager.shared.exit(restore: true)
                 } label: {
-                    Label("取消下班", systemImage: "moon.zzz.fill")
+                    Text("取消下班")
                         .foregroundColor(.orange)
+                        .fontWeight(.medium)
                 }
                 .help("退出下班模式，恢复提醒计时")
             } else {
                 Button {
                     OffWorkManager.shared.enter()
                 } label: {
-                    Label("下班", systemImage: "moon.zzz")
+                    Text("下班")
+                        .foregroundColor(Color(nsColor: NSColor.systemRed))
+                        .fontWeight(.semibold)
                 }
                 .help("进入下班模式：黑幕遮屏，暂停所有提醒")
             }
@@ -95,6 +96,8 @@ struct SettingsView: View {
             statusSidebar
         case .rules:
             rulesSidebar
+        case .appSettings:
+            EmptyView()
         }
     }
 
@@ -129,6 +132,8 @@ struct SettingsView: View {
             statusDetail
         case .rules:
             rulesDetail
+        case .appSettings:
+            EmptyView()
         }
     }
 
@@ -178,7 +183,6 @@ struct SettingsView: View {
 
 private struct RuleStatusRowBrief: View {
     let rule: ReminderRule
-
     var body: some View {
         HStack(spacing: 8) {
             Circle()
@@ -189,41 +193,31 @@ private struct RuleStatusRowBrief: View {
                 .foregroundColor(rule.isEnabled ? .primary : .secondary)
             Spacer()
             if !rule.isEnabled {
-                Image(systemName: "pause.fill")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                Image(systemName: "pause.fill").font(.caption2).foregroundColor(.secondary)
             }
         }
         .padding(.vertical, 2)
     }
 }
 
-// MARK: - Rule Row
+// MARK: - Rule Sidebar Row
 
 private struct RuleRowView: View {
     let rule: ReminderRule
-
     var body: some View {
         HStack(spacing: 10) {
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color(ThemeColors.find(rule.themeId).primary).opacity(rule.isEnabled ? 1 : 0.4))
                 .frame(width: 4, height: 28)
-
             VStack(alignment: .leading, spacing: 2) {
-                Text(rule.name)
-                    .font(.body)
+                Text(rule.name).font(.body)
                     .foregroundColor(rule.isEnabled ? .primary : .secondary)
-                Text("每 \(rule.intervalMinutes) 分钟 · \(ThemeColors.find(rule.themeId).name)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                Text("每 \(rule.intervalMinutes) 分 · \(ThemeColors.find(rule.themeId).name)")
+                    .font(.caption2).foregroundColor(.secondary)
             }
-
             Spacer()
-
             if !rule.isEnabled {
-                Image(systemName: "pause.fill")
-                    .foregroundColor(.secondary)
-                    .font(.caption2)
+                Image(systemName: "pause.fill").foregroundColor(.secondary).font(.caption2)
             }
         }
         .padding(.vertical, 2)

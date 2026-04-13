@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-04-13
+
+### Fixed
+- 系统设置改为独立 Tab（第三个标签页），解决 sheet 方式不弹出的问题
+- 「下班」按钮改为红色文字，常驻 toolbar 右侧
+
 ## [1.7.0] - 2026-04-13
 
 ### Added
