@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-04-13
+
+### Fixed
+- 恢复原始自定义 Tab Bar 风格（VStack + 粉色按钮），放弃 macOS 原生 NavigationSplitView toolbar
+- 「系统设置」作为第三个 Tab 按钮嵌入原有 Tab Bar
+- 「下班」按钮常驻 Tab Bar 右侧，红色加粗，进入下班后变为橙色「取消下班」
+
 ## [1.8.0] - 2026-04-13
 
 ### Fixed
