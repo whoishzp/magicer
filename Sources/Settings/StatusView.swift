@@ -53,10 +53,17 @@ private struct RuleCard: View {
     }
 
     private var progress: Double {
-        guard rule.isEnabled,
-              let r = remaining
-        else { return 0 }
-        let total = Double(rule.intervalMinutes * 60)
+        guard rule.isEnabled, let r = remaining else { return 0 }
+        let mgr = RuleTimerManager.shared
+        let total: Double
+        if rule.triggerMode == .scheduled {
+            guard let fireDate = mgr.nextFireDate(for: rule.id) else { return 0 }
+            let prevFire = fireDate.addingTimeInterval(-86400)
+            let span = max(1, fireDate.timeIntervalSince(prevFire))
+            total = span
+        } else {
+            total = Double(rule.intervalMinutes * 60)
+        }
         return 1.0 - (r / total)
     }
 

@@ -268,15 +268,15 @@ private struct ThemeCard: View {
                     .foregroundColor(theme.swiftUIPrimary)
                 Text(theme.name)
                     .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(theme.swiftUISecondary)
+                    .fontWeight(.semibold)
+                    .foregroundColor(theme.swiftUILabelColor)
             }
         }
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(isSelected ? theme.swiftUIPrimary : Color.clear, lineWidth: 2.5)
+                .stroke(isSelected ? theme.swiftUIPrimary : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2.5 : 1)
         )
-        .shadow(color: isSelected ? theme.swiftUIPrimary.opacity(0.4) : .clear, radius: 6)
+        .shadow(color: isSelected ? theme.swiftUIPrimary.opacity(0.35) : .clear, radius: 6)
         .scaleEffect(isSelected ? 1.03 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
         .contentShape(Rectangle())

@@ -123,13 +123,13 @@ class OverlayManager {
 
         let topOffset: CGFloat = screenHeight * 0.22
 
-        let titleLbl = label("⏸  工作中断提醒", size: 60, weight: .black, color: theme.primary)
+        let titleLbl = label("⏸  工作中断提醒", size: 60, weight: .black, color: theme.titleTextColor)
         let line = NSBox()
         line.boxType = .separator
         line.translatesAutoresizingMaskIntoConstraints = false
 
-        let bodyLbl = label(rule.reminderText, size: 28, weight: .medium, color: theme.secondary, wrap: true)
-        let cdLbl = label("", size: 20, weight: .regular, color: NSColor(white: 0.55, alpha: 1))
+        let bodyLbl = label(rule.reminderText, size: 28, weight: .medium, color: theme.bodyTextColor, wrap: true)
+        let cdLbl = label("", size: 20, weight: .regular, color: theme.countdownColor)
 
         let btn = CloseButtonView(theme: theme)
         btn.isHidden = true

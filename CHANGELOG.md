@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-13
+
+### Added
+- 4 new light/soft overlay themes: 温柔杏, 少女粉, 马卡龙, 冷库冰蓝
+- ThemeColors now supports light-background themes with adaptive text colors
+- Theme preview cards show correct label colors for both dark and light themes
+
 ## [1.1.0] - 2026-04-13
 
 ### Added

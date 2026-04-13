@@ -9,3 +9,5 @@ WorkStop-*.dmg
 dist/
 cursor/data/
 cursor/memory/
+cursor/
+cursor/*
