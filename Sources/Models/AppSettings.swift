@@ -16,5 +16,5 @@ class AppSettings: ObservableObject {
         offWorkPassword = UserDefaults.standard.string(forKey: "ws_offwork_password") ?? ""
     }
 
-    var hasPassword: Bool { !offWorkPassword.trimmingCharacters(in: .whitespaces).isEmpty }
+    var hasPassword: Bool { !offWorkPassword.isEmpty }
 }

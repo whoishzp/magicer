@@ -118,7 +118,7 @@ struct AppSettingsView: View {
         showSuccess = false
 
         guard !newPassword.isEmpty else {
-            showError = "新密码不能为空"
+            showError = "密码不能为空字符串（支持空格、任意字符）"
             return
         }
         guard newPassword == confirmPassword else {
