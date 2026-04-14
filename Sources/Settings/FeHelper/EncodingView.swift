@@ -133,6 +133,7 @@ struct EncodingView: View {
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
+            .background(Color.primary.opacity(0.0001))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -53,12 +53,12 @@ struct FeHelperView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
-            .background(selectedTool == tool ? Color.accentColor : Color.clear)
+            .background(selectedTool == tool ? Color.accentColor : Color.primary.opacity(0.0001))
             .foregroundColor(selectedTool == tool ? .white : .secondary)
             .cornerRadius(7)
+            .contentShape(RoundedRectangle(cornerRadius: 7))
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
     }
 
     // MARK: - Tool Content
