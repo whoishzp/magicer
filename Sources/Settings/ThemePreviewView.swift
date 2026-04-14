@@ -3,11 +3,16 @@ import SwiftUI
 /// Preview window: matches the actual overlay layout for each theme.
 struct ThemePreviewView: View {
     let theme: ThemeColors
+    let ruleName: String
     let reminderText: String
     @Environment(\.dismiss) private var dismiss
 
     private var sampleText: String {
         reminderText.isEmpty ? "（这里是你的提醒内容）" : reminderText
+    }
+
+    private var displayName: String {
+        ruleName.isEmpty ? "工作中断提醒" : ruleName
     }
 
     var body: some View {
@@ -68,7 +73,7 @@ struct ThemePreviewView: View {
         VStack(spacing: 0) {
             Spacer().frame(height: 90)
 
-            Text("⚠  工作中断提醒")
+            Text("⚠  \(displayName)")
                 .font(.system(size: 38, weight: .black))
                 .foregroundColor(Color(theme.titleTextColor))
                 .multilineTextAlignment(.center)
@@ -103,7 +108,7 @@ struct ThemePreviewView: View {
                 .font(.system(size: 80, weight: .ultraLight))
                 .foregroundColor(Color(theme.primary).opacity(0.8))
 
-            Text("休 息 一 下")
+            Text(displayName)
                 .font(.system(size: 16, weight: .light))
                 .foregroundColor(Color(theme.primary).opacity(0.9))
                 .padding(.top, 4)
@@ -140,7 +145,7 @@ struct ThemePreviewView: View {
                 Text("🌿")
                     .font(.system(size: 56))
 
-                Text("工作中断提醒")
+                Text(displayName)
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(Color(theme.titleTextColor))
 
@@ -172,7 +177,7 @@ struct ThemePreviewView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Spacer().frame(height: 100)
 
-                Text("> BREAK_TIME —")
+                Text("> \(displayName) —")
                     .font(.system(size: 13, weight: .regular, design: .monospaced))
                     .foregroundColor(Color(theme.primary).opacity(0.55))
 
@@ -208,7 +213,7 @@ struct ThemePreviewView: View {
             Text("🌸  🌸  🌸  🌸  🌸")
                 .font(.system(size: 28))
 
-            Text("工作中断提醒")
+            Text(displayName)
                 .font(.system(size: 28, weight: .semibold))
                 .foregroundColor(Color(theme.titleTextColor))
                 .padding(.top, 14)
@@ -247,7 +252,7 @@ struct ThemePreviewView: View {
             Text("✨  💕  ✨")
                 .font(.system(size: 32))
 
-            Text("✨ 需要休息啦 ✨")
+            Text("✨ \(displayName) ✨")
                 .font(.system(size: 36, weight: .bold))
                 .foregroundColor(Color(theme.titleTextColor))
                 .padding(.top, 6)
@@ -287,7 +292,7 @@ struct ThemePreviewView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("🍭")
                             .font(.system(size: 46))
-                        Text("工作中断提醒")
+                        Text(displayName)
                             .font(.system(size: 36, weight: .heavy))
                             .foregroundColor(Color(theme.titleTextColor))
                         Text("— BREAK TIME —")
@@ -329,7 +334,7 @@ struct ThemePreviewView: View {
                     .foregroundColor(Color(theme.primary).opacity(0.7))
 
                 Group {
-                    Text("STATUS   : BREAK REQUIRED")
+                    Text("RULE     : \(displayName)")
                     Text("REMINDER : \(sampleText)")
                 }
                 .font(.system(size: 13, weight: .regular, design: .monospaced))

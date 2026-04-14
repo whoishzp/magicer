@@ -26,7 +26,7 @@ struct RuleEditView: View {
             set: { if !$0 { previewTheme = nil } }
         )) {
             if let t = previewTheme {
-                ThemePreviewView(theme: t, reminderText: rule.reminderText)
+                ThemePreviewView(theme: t, ruleName: rule.name, reminderText: rule.reminderText)
                     .frame(width: 720, height: 480)
             }
         }

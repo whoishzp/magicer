@@ -174,7 +174,7 @@ class OverlayManager {
     private static func buildDramatic(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
         let topOffset = size.height * 0.20
 
-        let title = lbl("⚠  工作中断提醒", size: 62, weight: .black, color: theme.titleTextColor)
+        let title = lbl("⚠  \(rule.name)", size: 62, weight: .black, color: theme.titleTextColor)
         let sep = separator(theme.primary)
         let body = lbl(rule.reminderText, size: 28, weight: .medium, color: theme.bodyTextColor, wrap: true)
         let cd = lbl("", size: 20, weight: .regular, color: theme.countdownColor)
@@ -202,7 +202,7 @@ class OverlayManager {
         let topOffset = size.height * 0.24
 
         let circle = lbl("◉", size: 110, weight: .ultraLight, color: theme.primary.withAlphaComponent(0.8))
-        let sub = lbl("休 息 一 下", size: 22, weight: .light, color: theme.primary.withAlphaComponent(0.9))
+        let sub = lbl(rule.name, size: 22, weight: .light, color: theme.primary.withAlphaComponent(0.9))
         let body = lbl(rule.reminderText, size: 24, weight: .regular, color: theme.bodyTextColor, wrap: true)
         let cd = lbl("", size: 18, weight: .light, color: theme.countdownColor)
         let btn = CloseButtonView(theme: theme); btn.isHidden = true
@@ -236,7 +236,7 @@ class OverlayManager {
 
         let leaf = lbl("🌿", size: 80, weight: .regular, color: theme.primary)
         leaf.alignment = .left
-        let title = lblLeft("工作中断提醒", size: 44, weight: .bold, color: theme.titleTextColor)
+        let title = lblLeft(rule.name, size: 44, weight: .bold, color: theme.titleTextColor)
         let body = lblLeft(rule.reminderText, size: 24, weight: .regular, color: theme.bodyTextColor, wrap: true)
         let cd = lbl("", size: 18, weight: .regular, color: theme.countdownColor)
         let btn = CloseButtonView(theme: theme); btn.isHidden = true
@@ -269,7 +269,7 @@ class OverlayManager {
         let leftMargin: CGFloat = size.width * 0.25
         let topOffset = size.height * 0.26
 
-        let prompt = lblLeft("> BREAK_TIME —", size: 18, weight: .regular,
+        let prompt = lblLeft("> \(rule.name) —", size: 18, weight: .regular,
                              color: theme.primary.withAlphaComponent(0.55), mono: true)
         let dashLine = lblLeft("─────────────────────────────────────────────────",
                                size: 13, weight: .regular, color: theme.primary.withAlphaComponent(0.25), mono: true)
@@ -300,7 +300,7 @@ class OverlayManager {
         let topOffset = size.height * 0.18
 
         let flowers = lbl("🌸  🌸  🌸  🌸  🌸", size: 36, weight: .regular, color: .clear)
-        let title = lbl("工作中断提醒", size: 38, weight: .semibold, color: theme.titleTextColor)
+        let title = lbl(rule.name, size: 38, weight: .semibold, color: theme.titleTextColor)
 
         // Rounded body container
         let container = NSView(); container.wantsLayer = true
@@ -345,7 +345,7 @@ class OverlayManager {
         let topOffset = size.height * 0.20
 
         let decoTop = lbl("✨  💕  ✨", size: 44, weight: .regular, color: .clear)
-        let title = lbl("✨ 需要休息啦 ✨", size: 52, weight: .bold, color: theme.titleTextColor)
+        let title = lbl("✨ \(rule.name) ✨", size: 52, weight: .bold, color: theme.titleTextColor)
         let body = lbl(rule.reminderText, size: 26, weight: .medium, color: theme.bodyTextColor, wrap: true)
         let decoMid = lbl("♡  ♡  ♡  ♡  ♡  ♡", size: 24, weight: .regular, color: theme.primary.withAlphaComponent(0.4))
         let cd = lbl("", size: 18, weight: .regular, color: theme.countdownColor)
@@ -381,7 +381,7 @@ class OverlayManager {
         block.translatesAutoresizingMaskIntoConstraints = false
 
         let emoji = lblLeft("🍭", size: 64, weight: .regular, color: .clear)
-        let title = lblLeft("工作中断提醒", size: 52, weight: .heavy, color: theme.titleTextColor)
+        let title = lblLeft(rule.name, size: 52, weight: .heavy, color: theme.titleTextColor)
         let accent = lblLeft("— BREAK TIME —", size: 16, weight: .semibold,
                              color: theme.primary.withAlphaComponent(0.6))
         let body = lbl(rule.reminderText, size: 26, weight: .medium, color: theme.bodyTextColor, wrap: true)
@@ -421,7 +421,7 @@ class OverlayManager {
 
         let header = lblLeft("SYSTEM  ═══════════════════════════════════════",
                              size: 15, weight: .medium, color: theme.primary.withAlphaComponent(0.7), mono: true)
-        let statusRow = lblLeft("STATUS   : BREAK REQUIRED",
+        let statusRow = lblLeft("RULE     : \(rule.name)",
                                 size: 16, weight: .regular, color: theme.bodyTextColor, mono: true)
         let reminderRow = lblLeft("REMINDER : \(rule.reminderText)",
                                   size: 16, weight: .regular, color: theme.bodyTextColor, wrap: true, mono: true)
