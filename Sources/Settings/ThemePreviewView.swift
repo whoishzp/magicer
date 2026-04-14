@@ -1,89 +1,375 @@
 import SwiftUI
 
-/// Full-size preview window simulating the actual overlay appearance.
+/// Preview window: matches the actual overlay layout for each theme.
 struct ThemePreviewView: View {
     let theme: ThemeColors
     let reminderText: String
     @Environment(\.dismiss) private var dismiss
 
+    private var sampleText: String {
+        reminderText.isEmpty ? "（这里是你的提醒内容）" : reminderText
+    }
+
     var body: some View {
         ZStack {
             Color(theme.background).ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
+            // Layout varies per theme
+            layoutContent
 
-                // Title
-                Text("⏸  工作中断提醒")
-                    .font(.system(size: 44, weight: .black))
-                    .foregroundColor(Color(theme.titleTextColor))
-                    .multilineTextAlignment(.center)
-
-                // Separator
-                Rectangle()
-                    .fill(Color(theme.bodyTextColor).opacity(0.25))
-                    .frame(height: 1)
-                    .frame(maxWidth: 420)
-                    .padding(.top, 20)
-                    .padding(.bottom, 30)
-
-                // Reminder text
-                Text(reminderText.isEmpty ? "（这里是你的提醒内容）" : reminderText)
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundColor(Color(theme.bodyTextColor))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-
-                // Countdown placeholder
-                Text("10 秒后可关闭…")
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(Color(theme.countdownColor))
-                    .padding(.top, 40)
-
-                // Close button preview
+            // Close overlay
+            VStack {
                 HStack {
-                    Text("✓   我知道了，开始休息")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 28)
-                        .padding(.vertical, 14)
-                        .background(Color(theme.primary).opacity(0.7))
-                        .cornerRadius(12)
+                    Spacer()
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(Color(theme.bodyTextColor).opacity(0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.escape, modifiers: [])
+                    .padding(14)
                 }
-                .padding(.top, 12)
-                .opacity(0.6)
+                Spacer()
+                HStack {
+                    HStack(spacing: 6) {
+                        Circle().fill(Color(theme.primary)).frame(width: 9, height: 9)
+                        Text(theme.name + " · 预览模式")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color(theme.bodyTextColor).opacity(0.4))
+                    }
+                    .padding(14)
+                    Spacer()
+                }
+            }
+        }
+        .frame(width: 720, height: 480)
+    }
 
-                Text("（按 Enter 4 次或等倒计时结束后可关闭）")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(theme.bodyTextColor).opacity(0.4))
-                    .padding(.top, 10)
+    // MARK: - Layout Dispatch
 
-                Spacer(minLength: 0)
-            }
+    @ViewBuilder
+    private var layoutContent: some View {
+        switch theme.overlayLayout {
+        case .dramatic:  dramaticLayout
+        case .serene:    sereneLayout
+        case .nature:    natureLayout
+        case .terminal:  terminalLayout
+        case .gentle:    gentleLayout
+        case .playful:   playfulLayout
+        case .colorful:  colorfulLayout
+        case .technical: technicalLayout
         }
-        .overlay(alignment: .topTrailing) {
-            Button { dismiss() } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(Color(theme.bodyTextColor).opacity(0.6))
-            }
-            .buttonStyle(.plain)
-            .padding(18)
-            .keyboardShortcut(.escape, modifiers: [])
+    }
+
+    // MARK: - 1. Dramatic (深红警告)
+
+    private var dramaticLayout: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 90)
+
+            Text("⚠  工作中断提醒")
+                .font(.system(size: 38, weight: .black))
+                .foregroundColor(Color(theme.titleTextColor))
+                .multilineTextAlignment(.center)
+
+            Rectangle()
+                .fill(Color(theme.primary).opacity(0.6))
+                .frame(height: 1)
+                .frame(maxWidth: 480)
+                .padding(.top, 18)
+
+            Text(sampleText)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(Color(theme.bodyTextColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+                .padding(.top, 28)
+
+            countdownLabel.padding(.top, 36)
+            closeButtonPreview.padding(.top, 10)
+
+            Spacer()
         }
-        .overlay(alignment: .bottomLeading) {
-            HStack(spacing: 6) {
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(Color(theme.primary))
-                    .frame(width: 10, height: 10)
-                Text(theme.name)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(theme.bodyTextColor).opacity(0.5))
-                Text("· 预览模式")
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(theme.bodyTextColor).opacity(0.35))
-            }
-            .padding(16)
+    }
+
+    // MARK: - 2. Serene (深蓝平静)
+
+    private var sereneLayout: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 80)
+
+            Text("◉")
+                .font(.system(size: 80, weight: .ultraLight))
+                .foregroundColor(Color(theme.primary).opacity(0.8))
+
+            Text("休 息 一 下")
+                .font(.system(size: 16, weight: .light))
+                .foregroundColor(Color(theme.primary).opacity(0.9))
+                .padding(.top, 4)
+
+            Text(sampleText)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundColor(Color(theme.bodyTextColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 60)
+                .padding(.top, 24)
+
+            countdownLabel.padding(.top, 32)
+            closeButtonPreview.padding(.top, 10)
+
+            Spacer()
         }
+    }
+
+    // MARK: - 3. Nature (深绿清新)
+
+    private var natureLayout: some View {
+        HStack(alignment: .top, spacing: 0) {
+            Spacer().frame(width: 60)
+
+            // Vertical accent bar
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color(theme.primary).opacity(0.7))
+                .frame(width: 5, height: 200)
+                .padding(.top, 80)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Spacer().frame(height: 80)
+
+                Text("🌿")
+                    .font(.system(size: 56))
+
+                Text("工作中断提醒")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(Color(theme.titleTextColor))
+
+                Text(sampleText)
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .padding(.top, 8)
+                    .frame(maxWidth: 460, alignment: .leading)
+
+                countdownLabel
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 20)
+                closeButtonPreview.padding(.top, 8)
+
+                Spacer()
+            }
+            .padding(.leading, 20)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - 4. Terminal (黑白极简)
+
+    private var terminalLayout: some View {
+        HStack(alignment: .top, spacing: 0) {
+            Spacer().frame(width: 110)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer().frame(height: 100)
+
+                Text("> BREAK_TIME —")
+                    .font(.system(size: 13, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.primary).opacity(0.55))
+
+                Text("─────────────────────────────────────────")
+                    .font(.system(size: 10, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.primary).opacity(0.25))
+                    .padding(.top, 8)
+
+                Text("  \(sampleText)")
+                    .font(.system(size: 18, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .padding(.top, 14)
+                    .frame(maxWidth: 480, alignment: .leading)
+
+                countdownLabel
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 24)
+                closeButtonPreview.padding(.top, 8)
+
+                Spacer()
+            }
+
+            Spacer()
+        }
+    }
+
+    // MARK: - 5. Gentle (温柔杏)
+
+    private var gentleLayout: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 60)
+
+            Text("🌸  🌸  🌸  🌸  🌸")
+                .font(.system(size: 28))
+
+            Text("工作中断提醒")
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundColor(Color(theme.titleTextColor))
+                .padding(.top, 14)
+
+            // Rounded container
+            Text(sampleText)
+                .font(.system(size: 19, weight: .medium))
+                .foregroundColor(Color(theme.bodyTextColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 20)
+                .frame(maxWidth: 500)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(theme.primary).opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color(theme.primary).opacity(0.2), lineWidth: 1.5)
+                        )
+                )
+                .padding(.top, 20)
+
+            countdownLabel.padding(.top, 20)
+            closeButtonPreview.padding(.top, 8)
+            Spacer()
+        }
+        .padding(.horizontal, 40)
+    }
+
+    // MARK: - 6. Playful (少女粉)
+
+    private var playfulLayout: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 60)
+
+            Text("✨  💕  ✨")
+                .font(.system(size: 32))
+
+            Text("✨ 需要休息啦 ✨")
+                .font(.system(size: 36, weight: .bold))
+                .foregroundColor(Color(theme.titleTextColor))
+                .padding(.top, 6)
+
+            Text(sampleText)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(Color(theme.bodyTextColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+                .padding(.top, 24)
+
+            Text("♡  ♡  ♡  ♡  ♡  ♡")
+                .font(.system(size: 18))
+                .foregroundColor(Color(theme.primary).opacity(0.4))
+                .padding(.top, 18)
+
+            countdownLabel.padding(.top, 16)
+            closeButtonPreview.padding(.top, 8)
+            Spacer()
+        }
+    }
+
+    // MARK: - 7. Colorful (马卡龙)
+
+    private var colorfulLayout: some View {
+        HStack(alignment: .top, spacing: 0) {
+            Spacer().frame(width: 60)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer().frame(height: 70)
+
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(theme.primary).opacity(0.12))
+                        .frame(width: 380, height: 145)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("🍭")
+                            .font(.system(size: 46))
+                        Text("工作中断提醒")
+                            .font(.system(size: 36, weight: .heavy))
+                            .foregroundColor(Color(theme.titleTextColor))
+                        Text("— BREAK TIME —")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color(theme.primary).opacity(0.6))
+                    }
+                    .padding(14)
+                }
+
+                Text(sampleText)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .frame(maxWidth: 480, alignment: .leading)
+                    .padding(.top, 28)
+
+                countdownLabel
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 24)
+                closeButtonPreview.padding(.top, 8)
+
+                Spacer()
+            }
+
+            Spacer()
+        }
+    }
+
+    // MARK: - 8. Technical (冷库冰蓝)
+
+    private var technicalLayout: some View {
+        HStack(alignment: .top, spacing: 0) {
+            Spacer().frame(width: 90)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer().frame(height: 100)
+
+                Text("SYSTEM  ══════════════════════════════")
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color(theme.primary).opacity(0.7))
+
+                Group {
+                    Text("STATUS   : BREAK REQUIRED")
+                    Text("REMINDER : \(sampleText)")
+                }
+                .font(.system(size: 13, weight: .regular, design: .monospaced))
+                .foregroundColor(Color(theme.bodyTextColor))
+                .padding(.top, 10)
+
+                Text("──────────────────────────────────────")
+                    .font(.system(size: 10, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.primary).opacity(0.3))
+                    .padding(.top, 14)
+
+                countdownLabel
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 14)
+                closeButtonPreview.padding(.top, 8)
+
+                Spacer()
+            }
+            .frame(maxWidth: 580, alignment: .leading)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Shared Sub-views
+
+    private var countdownLabel: some View {
+        Text("10 秒后可关闭…")
+            .font(.system(size: 14, weight: .regular))
+            .foregroundColor(Color(theme.countdownColor))
+    }
+
+    private var closeButtonPreview: some View {
+        Text("✓   我知道了，开始休息")
+            .font(.system(size: 15, weight: .bold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 22)
+            .padding(.vertical, 11)
+            .background(Color(theme.primary).opacity(0.65))
+            .cornerRadius(10)
+            .opacity(0.65)
     }
 }
