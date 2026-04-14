@@ -63,6 +63,11 @@ struct JsonBeautifyView: View {
             .padding(12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: input) { _ in
+            if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                formatJSON()
+            }
+        }
     }
 
     private func formatJSON() {

@@ -53,15 +53,6 @@ struct TimestampView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Title
-                HStack(spacing: 8) {
-                    Text("🧠").font(.title2)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("智能时间解析器").font(.system(size: 15, weight: .semibold))
-                        Text("支持 Unix时间戳、ISO 8601、RFC 3339、自然语言等多种格式").font(.caption).foregroundColor(.secondary)
-                    }
-                }
-
                 // Quick actions
                 quickActionsSection
 
@@ -79,6 +70,9 @@ struct TimestampView: View {
             fillQuickAction(.now)
         }
         .onDisappear { timer?.invalidate() }
+        .onChange(of: inputText) { _ in
+            parseInput()
+        }
     }
 
     // MARK: - Quick Actions

@@ -16,7 +16,28 @@ final class MenuBarManager: NSObject {
             btn.image = NSImage(systemSymbolName: "clock.badge.exclamationmark", accessibilityDescription: "Magicer")
             btn.image?.isTemplate = true
         }
+        setupEditMenu()
         rebuildMenu()
+    }
+
+    private func setupEditMenu() {
+        let mainMenu = NSApp.mainMenu ?? NSMenu()
+        NSApp.mainMenu = mainMenu
+
+        // Ensure Edit menu exists
+        if mainMenu.item(withTitle: "Edit") == nil {
+            let editMenu = NSMenu(title: "Edit")
+            editMenu.addItem(NSMenuItem(title: "Undo", action: Selector(("undo:")), keyEquivalent: "z"))
+            editMenu.addItem(NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "Z"))
+            editMenu.addItem(.separator())
+            editMenu.addItem(NSMenuItem(title: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
+            editMenu.addItem(NSMenuItem(title: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
+            editMenu.addItem(NSMenuItem(title: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
+            editMenu.addItem(NSMenuItem(title: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+            let editItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: "")
+            editItem.submenu = editMenu
+            mainMenu.addItem(editItem)
+        }
     }
 
     func rebuildMenu() {
