@@ -55,15 +55,14 @@ struct JsonDiffView: View {
             Divider()
 
             // Two editable JSON panels side by side
-            HStack(spacing: 0) {
+            HStack(spacing: 10) {
                 panelView(title: "JSON A", text: $leftFormatted, diffLines: leftDiffLines)
                     .onChange(of: leftFormatted) { _ in processChange(side: .left) }
-
-                Divider().background(Color.gray.opacity(0.4))
 
                 panelView(title: "JSON B", text: $rightFormatted, diffLines: rightDiffLines)
                     .onChange(of: rightFormatted) { _ in processChange(side: .right) }
             }
+            .padding(.horizontal, 10)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

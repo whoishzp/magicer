@@ -211,11 +211,11 @@ struct TimestampView: View {
             Text(value).font(.system(size: 13, weight: .semibold, design: .monospaced))
         }
         .frame(maxWidth: .infinity)
-        .onTapGesture {
+        .onTapGesture(count: 2) {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(value, forType: .string)
         }
-        .help("点击复制")
+        .help("双击复制")
     }
 
     private var parseResultsView: some View {

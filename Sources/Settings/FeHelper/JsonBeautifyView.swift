@@ -8,7 +8,7 @@ struct JsonBeautifyView: View {
     @State private var copyFeedback: String = ""
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             // Left: input
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
