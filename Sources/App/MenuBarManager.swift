@@ -11,10 +11,13 @@ final class MenuBarManager: NSObject {
     var onOpenSettings: (() -> Void)?
 
     func setup() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem.button {
-            btn.image = NSImage(systemSymbolName: "clock.badge.exclamationmark", accessibilityDescription: "Magicer")
-            btn.image?.isTemplate = true
+            if let img = NSImage(systemSymbolName: "clock.badge.exclamationmark", accessibilityDescription: "Magicer") {
+                img.isTemplate = true
+                btn.image = img
+            }
+            btn.title = ""
         }
         setupEditMenu()
         rebuildMenu()
