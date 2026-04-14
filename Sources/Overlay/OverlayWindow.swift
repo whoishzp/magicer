@@ -93,10 +93,10 @@ class OverlayManager {
     private static func buildWindow(screen: NSScreen, rule: ReminderRule, theme: ThemeColors) -> NSWindow {
         let fr = screen.frame
         let win = OverlayNSWindow(contentRect: fr, styleMask: .borderless, backing: .buffered, defer: false, screen: screen)
-        win.level = NSWindow.Level(rawValue: Int(NSWindow.Level.screenSaver.rawValue) + 100)
+        win.level = NSWindow.Level(rawValue: Int(NSWindow.Level.screenSaver.rawValue) + 200)
         win.isOpaque = true
         win.backgroundColor = theme.background
-        win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         win.ignoresMouseEvents = false
         win.acceptsMouseMovedEvents = true
 

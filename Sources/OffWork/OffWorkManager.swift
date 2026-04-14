@@ -79,10 +79,10 @@ class OffWorkManager {
                 defer: false,
                 screen: screen
             )
-            win.level = NSWindow.Level(rawValue: Int(NSWindow.Level.screenSaver.rawValue) + 150)
+            win.level = NSWindow.Level(rawValue: Int(NSWindow.Level.screenSaver.rawValue) + 200)
             win.isOpaque = true
             win.backgroundColor = .black
-            win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+            win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             win.ignoresMouseEvents = false
 
             // Animated scanning eyes overlay

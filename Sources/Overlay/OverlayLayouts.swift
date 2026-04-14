@@ -33,6 +33,8 @@ extension OverlayManager {
         f.font = mono ? .monospacedSystemFont(ofSize: size, weight: weight) : .systemFont(ofSize: size, weight: weight)
         f.textColor = color
         f.alignment = .center
+        f.drawsBackground = false
+        f.backgroundColor = .clear
         f.translatesAutoresizingMaskIntoConstraints = false
         return f
     }

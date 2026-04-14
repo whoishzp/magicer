@@ -8,6 +8,60 @@ struct RuleEditView: View {
     @State private var showTimePicker = false
     @State private var previewTheme: ThemeColors? = nil
 
+    // Returns names of other enabled rules whose fire times overlap with the current rule.
+    private var timeConflicts: [String] {
+        let others = RulesStore.shared.rules.filter { $0.id != rule.id && $0.isEnabled }
+        var names: [String] = []
+
+        switch rule.triggerMode {
+        case .interval:
+            break // interval rules don't have fixed times, no conflict possible
+
+        case .scheduled:
+            guard !rule.scheduledTimes.isEmpty else { break }
+            for other in others {
+                let otherTimes: [(Int, Int)]
+                switch other.triggerMode {
+                case .scheduled:
+                    otherTimes = other.scheduledTimes.map { ($0.hour, $0.minute) }
+                case .once:
+                    let cal = Calendar.current
+                    let h = cal.component(.hour, from: other.onceDate)
+                    let m = cal.component(.minute, from: other.onceDate)
+                    otherTimes = [(h, m)]
+                case .interval:
+                    otherTimes = []
+                }
+                let conflict = rule.scheduledTimes.contains { t in
+                    otherTimes.contains { $0.0 == t.hour && $0.1 == t.minute }
+                }
+                if conflict { names.append(other.name) }
+            }
+
+        case .once:
+            for other in others {
+                switch other.triggerMode {
+                case .once:
+                    // Two once-rules within 1 minute of each other
+                    if abs(other.onceDate.timeIntervalSince(rule.onceDate)) < 60 {
+                        names.append(other.name)
+                    }
+                case .scheduled:
+                    let cal = Calendar.current
+                    let rh = cal.component(.hour, from: rule.onceDate)
+                    let rm = cal.component(.minute, from: rule.onceDate)
+                    if other.scheduledTimes.contains(where: { $0.hour == rh && $0.minute == rm }) {
+                        names.append(other.name)
+                    }
+                case .interval:
+                    break
+                }
+            }
+        }
+
+        return Array(Set(names)).sorted()
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -86,6 +140,21 @@ struct RuleEditView: View {
                 scheduledConfig
             } else {
                 onceConfig
+            }
+
+            // Time-conflict warning
+            let conflicts = timeConflicts
+            if !conflicts.isEmpty {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                        .font(.caption)
+                        .padding(.top, 1)
+                    Text("时间与以下规则冲突：\(conflicts.joined(separator: "、"))。同一时刻的多个规则会同时触发。")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                .padding(.vertical, 4)
             }
 
             Divider()
