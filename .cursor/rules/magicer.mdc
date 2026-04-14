@@ -21,14 +21,26 @@ alwaysApply: true
 - 项目根目录和 `dist/` 目录各只保留**最新一个** `.dmg` 文件
 - `release.sh` 脚本会自动清理旧 DMG，但手动构建时需注意清理
 
-## 版本发布流程
+## 版本管理策略
+
+### 每次代码修改完成后（自动执行）
 
 ```bash
+# 1. 升版本号
 echo "x.y.z" > VERSION
-./release.sh
-# 更新 README.md 的版本号和变更日志
+# 2. 更新 README.md badge + 变更日志
+# 3. 提交 + push + 打 tag
 git add -A && git commit -m "vx.y.z: <简要说明>" && git push
 git tag vx.y.z && git push origin vx.y.z
+```
+
+**不执行 `./release.sh`**，不生成 DMG，不创建 GitHub Release。
+
+### 仅当用户明确说"release"或"发布"时才执行完整发布
+
+```bash
+./release.sh
+# 该脚本自动构建 DMG、复制到桌面、创建 GitHub Release
 ```
 
 ## 技术栈约束
