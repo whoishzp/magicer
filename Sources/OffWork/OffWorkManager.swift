@@ -84,6 +84,12 @@ class OffWorkManager {
             win.backgroundColor = .black
             win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
             win.ignoresMouseEvents = false
+
+            // Animated scanning eyes overlay
+            let eyesView = ScanningEyesView(frame: NSRect(origin: .zero, size: fr.size))
+            eyesView.autoresizingMask = [.width, .height]
+            win.contentView?.addSubview(eyesView)
+
             win.makeKeyAndOrderFront(nil)
             win.setFrame(fr, display: true)
             windows.append(win)
