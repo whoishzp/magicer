@@ -2,20 +2,22 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var store = RulesStore.shared
-    @State private var selectedTab: Tab = .status
+    @State private var selectedTab: Tab = .appSettings
     @State private var selectedRuleId: UUID?
     @ObservedObject private var offWork = OffWorkState.shared
 
     enum Tab: String, CaseIterable {
+        case appSettings = "系统设置"
         case status      = "当前状态"
         case rules       = "规则配置"
-        case appSettings = "系统设置"
+        case feHelper    = "Fe助手"
 
         var icon: String {
             switch self {
+            case .appSettings: return "gearshape.2.fill"
             case .status:      return "chart.bar.fill"
             case .rules:       return "gearshape.fill"
-            case .appSettings: return "gearshape.2.fill"
+            case .feHelper:    return "wrench.and.screwdriver.fill"
             }
         }
     }
@@ -108,6 +110,8 @@ struct SettingsView: View {
             rulesTab
         case .appSettings:
             AppSettingsView(embedded: true)
+        case .feHelper:
+            FeHelperView()
         }
     }
 
