@@ -179,6 +179,7 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ### v1.56.0（2026-04-14）
 
+- 新增嵌入式 HTTP Server（`127.0.0.1:18879`）：实现完整 CRUD API（`GET /reminders`、`POST /reminders`、`PUT /reminders/{id}/toggle`、`DELETE /reminders/{id}`），AI Agent 可通过 curl 直接读写提醒规则
 - 定时提醒右上角新增「安装 Skill」按钮：一键同时写入 Cursor（`~/.cursor/skills/magicer-reminders/SKILL.md`）和 Claude（`~/.claude/CLAUDE.md` 标记块），支持重复安装（幂等更新）
 - 安装结果细分三态：全部成功 / 部分成功 / 失败，颜色区分
 
