@@ -2,7 +2,7 @@
 
 > 工作中断提醒 + 开发者工具箱 — macOS App
 
-[![Version](https://img.shields.io/badge/version-1.54.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.55.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -176,6 +176,10 @@ git tag v1.48.0 && git push origin v1.48.0
 ```
 
 ## 变更日志
+
+### v1.55.0（2026-04-14）
+
+- 移除定时提醒页面「导出 Skill」按钮（Skill 文件已在规则变更时自动同步，无需手动触发）
 
 ### v1.54.0（2026-04-14）
 
