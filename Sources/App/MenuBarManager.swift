@@ -46,9 +46,8 @@ final class MenuBarManager: NSObject {
         menu.addItem(loginItem)
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出 Magicer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "退出 Magicer", action: #selector(quit), keyEquivalent: "q"))
 
-        // NSMenu requires a target for @objc actions
         menu.items.forEach { $0.target = self }
         statusItem.menu = menu
     }
@@ -66,6 +65,8 @@ final class MenuBarManager: NSObject {
         OffWorkManager.shared.exit(restore: true)
         rebuildMenu()
     }
+
+    @objc private func quit() { NSApp.terminate(nil) }
 
     @objc private func toggleLoginItem() {
         do {
