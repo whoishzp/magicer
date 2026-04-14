@@ -11,16 +11,55 @@ final class MenuBarManager: NSObject {
     var onOpenSettings: (() -> Void)?
 
     func setup() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let btn = statusItem.button {
-            if let img = NSImage(systemSymbolName: "clock.badge.exclamationmark", accessibilityDescription: "Magicer") {
-                img.isTemplate = true
-                btn.image = img
-            }
-            btn.title = ""
+            let img = NSImage(systemSymbolName: "clock.badge.exclamationmark",
+                              accessibilityDescription: "Magicer") ?? NSImage(systemSymbolName: "clock", accessibilityDescription: "Magicer")
+            img?.isTemplate = true
+            btn.image = img
+            // Also respond to direct left-click to open settings
+            btn.action = #selector(handleStatusClick(_:))
+            btn.target = self
+            btn.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+        statusItem.isVisible = true
         setupEditMenu()
         rebuildMenu()
+    }
+
+    @objc private func handleStatusClick(_ sender: NSStatusBarButton) {
+        if let event = NSApp.currentEvent, event.type == .rightMouseUp {
+            statusItem.menu = buildContextMenu()
+            statusItem.button?.performClick(nil)
+            statusItem.menu = nil
+        } else {
+            onOpenSettings?()
+        }
+    }
+
+    private func buildContextMenu() -> NSMenu {
+        let menu = NSMenu()
+        let titleItem = NSMenuItem(title: "Magicer — 工作提醒", action: nil, keyEquivalent: "")
+        titleItem.isEnabled = false
+        menu.addItem(titleItem)
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "打开设置…", action: #selector(openSettings), keyEquivalent: ","))
+        menu.addItem(.separator())
+        let isOff = OffWorkManager.shared.isActive
+        let offItem = NSMenuItem(
+            title: isOff ? "取消下班" : "下班 🌙",
+            action: isOff ? #selector(cancelOffWork) : #selector(enterOffWork),
+            keyEquivalent: ""
+        )
+        menu.addItem(offItem)
+        menu.addItem(.separator())
+        let loginItem = NSMenuItem(title: "开机自启", action: #selector(toggleLoginItem), keyEquivalent: "")
+        loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        menu.addItem(loginItem)
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "退出 Magicer", action: #selector(quit), keyEquivalent: "q"))
+        menu.items.forEach { $0.target = self }
+        return menu
     }
 
     private func setupEditMenu() {
@@ -44,36 +83,8 @@ final class MenuBarManager: NSObject {
     }
 
     func rebuildMenu() {
-        let menu = NSMenu()
-
-        let titleItem = NSMenuItem(title: "Magicer — 工作提醒", action: nil, keyEquivalent: "")
-        titleItem.isEnabled = false
-        menu.addItem(titleItem)
-        menu.addItem(.separator())
-
-        menu.addItem(NSMenuItem(title: "打开设置…", action: #selector(openSettings), keyEquivalent: ","))
-        menu.addItem(.separator())
-
-        let isOff = OffWorkManager.shared.isActive
-        let offItem = NSMenuItem(
-            title: isOff ? "取消下班" : "下班 🌙",
-            action: isOff ? #selector(cancelOffWork) : #selector(enterOffWork),
-            keyEquivalent: ""
-        )
-        offItem.tag = 2
-        menu.addItem(offItem)
-        menu.addItem(.separator())
-
-        let loginItem = NSMenuItem(title: "开机自启", action: #selector(toggleLoginItem), keyEquivalent: "")
-        loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
-        loginItem.tag = 1
-        menu.addItem(loginItem)
-
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出 Magicer", action: #selector(quit), keyEquivalent: "q"))
-
-        menu.items.forEach { $0.target = self }
-        statusItem.menu = menu
+        // Left-click opens settings directly; right-click shows context menu (handled in handleStatusClick)
+        // No persistent menu on the statusItem to allow direct left-click action.
     }
 
     // MARK: - Actions
@@ -82,12 +93,10 @@ final class MenuBarManager: NSObject {
 
     @objc private func enterOffWork() {
         OffWorkManager.shared.enter()
-        rebuildMenu()
     }
 
     @objc private func cancelOffWork() {
         OffWorkManager.shared.exit(restore: true)
-        rebuildMenu()
     }
 
     @objc private func quit() { NSApp.terminate(nil) }
@@ -103,9 +112,6 @@ final class MenuBarManager: NSObject {
             let alert = NSAlert()
             alert.messageText = "开机自启设置失败：\(error.localizedDescription)"
             alert.runModal()
-        }
-        if let item = statusItem.menu?.item(withTag: 1) {
-            item.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         }
     }
 }
