@@ -6,6 +6,7 @@ struct RuleEditView: View {
     @State private var newHour = 9
     @State private var newMinute = 0
     @State private var showTimePicker = false
+    @State private var previewTheme: ThemeColors? = nil
 
     var body: some View {
         ScrollView {
@@ -20,6 +21,15 @@ struct RuleEditView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle(rule.name)
+        .sheet(isPresented: Binding(
+            get: { previewTheme != nil },
+            set: { if !$0 { previewTheme = nil } }
+        )) {
+            if let t = previewTheme {
+                ThemePreviewView(theme: t, reminderText: rule.reminderText)
+                    .frame(width: 720, height: 480)
+            }
+        }
         .alert("删除规则", isPresented: $showDeleteAlert) {
             Button("删除", role: .destructive) {
                 RulesStore.shared.deleteRules(at: IndexSet(
@@ -229,8 +239,10 @@ struct RuleEditView: View {
         sectionCard("蒙层风格") {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 ForEach(ThemeColors.all, id: \.id) { theme in
-                    ThemeCard(theme: theme, isSelected: rule.themeId == theme.id)
-                        .onTapGesture { rule.themeId = theme.id }
+                    ThemeCard(theme: theme, isSelected: rule.themeId == theme.id) {
+                        previewTheme = theme
+                    }
+                    .onTapGesture { rule.themeId = theme.id }
                 }
             }
         }
@@ -273,12 +285,15 @@ struct RuleEditView: View {
 private struct ThemeCard: View {
     let theme: ThemeColors
     let isSelected: Bool
+    let onPreview: () -> Void
+
+    @State private var hovered = false
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
                 .fill(theme.swiftUIBackground)
-                .frame(height: 80)
+                .frame(height: 88)
 
             VStack(spacing: 6) {
                 Text("⏸")
@@ -288,6 +303,28 @@ private struct ThemeCard: View {
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(theme.swiftUILabelColor)
+            }
+
+            // Preview button appears on hover (top-right corner)
+            if hovered {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            onPreview()
+                        } label: {
+                            Image(systemName: "eye.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(theme.swiftUILabelColor.opacity(0.8))
+                                .padding(5)
+                                .background(Color(theme.background).opacity(0.7))
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(6)
+                    }
+                    Spacer()
+                }
             }
         }
         .overlay(
@@ -299,6 +336,7 @@ private struct ThemeCard: View {
         .animation(.easeInOut(duration: 0.15), value: isSelected)
         .contentShape(Rectangle())
         .onHover { inside in
+            hovered = inside
             if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
         }
     }
