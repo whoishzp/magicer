@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
 
-APP_NAME="WorkStop"
+APP_DISPLAY="Magicer"
+BINARY_NAME="WorkStop"
 VERSION=$(cat VERSION | tr -d '[:space:]')
-DMG_NAME="${APP_NAME}-${VERSION}.dmg"
+DMG_NAME="${APP_DISPLAY}-${VERSION}.dmg"
 TMP_DIR="/tmp/${APP_NAME}_dmg_tmp"
 DIST_DIR="dist"
 
@@ -19,13 +20,13 @@ echo "▶ Building app..."
 echo "▶ Preparing DMG contents..."
 rm -rf "${TMP_DIR}"
 mkdir -p "${TMP_DIR}"
-cp -r "${APP_NAME}.app" "${TMP_DIR}/"
+cp -r "${BINARY_NAME}.app" "${TMP_DIR}/${APP_DISPLAY}.app"
 ln -s /Applications "${TMP_DIR}/Applications"
 
 echo "▶ Creating DMG..."
 rm -f "${DMG_NAME}"
 hdiutil create \
-  -volname "${APP_NAME} ${VERSION}" \
+  -volname "${APP_DISPLAY} ${VERSION}" \
   -srcfolder "${TMP_DIR}" \
   -ov \
   -format UDZO \
@@ -35,10 +36,13 @@ rm -rf "${TMP_DIR}"
 
 echo "▶ Saving to dist/..."
 mkdir -p "${DIST_DIR}"
+# Keep only the latest DMG — remove all old ones first
+rm -f "${DIST_DIR}"/*.dmg
 cp "${DMG_NAME}" "${DIST_DIR}/${DMG_NAME}"
-cp "${DMG_NAME}" "${DIST_DIR}/WorkStop-latest.dmg"
 
 echo "▶ Copying to Desktop..."
+# Replace any old Magicer/WorkStop DMGs on Desktop
+rm -f ~/Desktop/Magicer-*.dmg ~/Desktop/WorkStop-*.dmg
 cp "${DMG_NAME}" ~/Desktop/
 
 echo ""

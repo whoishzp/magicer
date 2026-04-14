@@ -9,6 +9,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar.onOpenSettings = { [weak self] in self?.openSettings() }
         menuBar.setup()
         RuleTimerManager.shared.start()
+        StartupCommandRunner.run()
         openSettings()
     }
 
@@ -32,7 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false
         )
-        window.title = "WorkStop"
+        window.title = "Magicer"
         window.contentView = NSHostingView(rootView: SettingsView())
         window.center()
         window.setFrameAutosaveName("WorkStopSettings")
@@ -43,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(
             forName: NSWindow.didUpdateNotification, object: window, queue: .main
         ) { [weak window] _ in
-            if window?.title != "WorkStop" { window?.title = "WorkStop" }
+            if window?.title != "Magicer" { window?.title = "Magicer" }
         }
     }
 }

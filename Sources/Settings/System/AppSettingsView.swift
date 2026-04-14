@@ -21,7 +21,7 @@ struct AppSettingsView: View {
                         .foregroundColor(.secondary)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("系统设置").font(.headline)
-                        Text("WorkStop 应用配置").font(.caption).foregroundColor(.secondary)
+                        Text("Magicer 应用配置").font(.caption).foregroundColor(.secondary)
                     }
                     Spacer()
                     Button("完成") { dismiss() }
@@ -34,6 +34,9 @@ struct AppSettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // Startup commands section
+                    startupCommandsSection
+
                     // Off-work password section
                     GroupBox {
                         VStack(alignment: .leading, spacing: 14) {
@@ -109,6 +112,96 @@ struct AppSettingsView: View {
         }
         .frame(minWidth: embedded ? 0 : 440, minHeight: embedded ? 0 : 360)
         .frame(maxWidth: embedded ? .infinity : 440, maxHeight: embedded ? .infinity : 360)
+    }
+
+    // MARK: - Startup Commands Section
+
+    @State private var newCmdLabel: String = ""
+    @State private var newCmdText: String = ""
+
+    private var startupCommandsSection: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 14) {
+                Label("启动执行命令", systemImage: "terminal.fill")
+                    .font(.subheadline.bold())
+                    .foregroundColor(.primary)
+
+                Text("软件启动时自动执行以下 shell 命令。按顺序执行，后台运行不阻塞启动。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Divider()
+
+                // Command list
+                if settings.startupCommands.isEmpty {
+                    Text("暂无命令")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                } else {
+                    VStack(spacing: 6) {
+                        ForEach($settings.startupCommands) { $cmd in
+                            HStack(spacing: 8) {
+                                Toggle("", isOn: $cmd.isEnabled)
+                                    .labelsHidden()
+                                    .controlSize(.small)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(cmd.label.isEmpty ? "(无标签)" : cmd.label)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(cmd.isEnabled ? .primary : .secondary)
+                                    Text(cmd.command)
+                                        .font(.system(size: 11, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                                Button {
+                                    settings.startupCommands.removeAll { $0.id == cmd.id }
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .background(Color(NSColor.controlBackgroundColor).opacity(0.6))
+                            .cornerRadius(6)
+                        }
+                    }
+                }
+
+                Divider()
+
+                // Add command row
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("添加命令").font(.caption).foregroundColor(.secondary)
+                    HStack(spacing: 8) {
+                        TextField("标签（如：打开代理）", text: $newCmdLabel)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 150)
+                        TextField("shell 命令（如：open -a Proxyman）", text: $newCmdText)
+                            .textFieldStyle(.roundedBorder)
+                        Button {
+                            guard !newCmdText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                            settings.startupCommands.append(StartupCommand(
+                                label: newCmdLabel.isEmpty ? newCmdText : newCmdLabel,
+                                command: newCmdText
+                            ))
+                            newCmdLabel = ""; newCmdText = ""
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.accentColor)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(newCmdText.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+            }
+            .padding(4)
+        }
     }
 
     // MARK: - Actions

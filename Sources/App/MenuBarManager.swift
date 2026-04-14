@@ -13,7 +13,7 @@ final class MenuBarManager: NSObject {
     func setup() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let btn = statusItem.button {
-            btn.image = NSImage(systemSymbolName: "clock.badge.exclamationmark", accessibilityDescription: "WorkStop")
+            btn.image = NSImage(systemSymbolName: "clock.badge.exclamationmark", accessibilityDescription: "Magicer")
             btn.image?.isTemplate = true
         }
         rebuildMenu()
@@ -22,7 +22,7 @@ final class MenuBarManager: NSObject {
     func rebuildMenu() {
         let menu = NSMenu()
 
-        let titleItem = NSMenuItem(title: "WorkStop — 工作提醒", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "Magicer — 工作提醒", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
         menu.addItem(.separator())
@@ -46,7 +46,7 @@ final class MenuBarManager: NSObject {
         menu.addItem(loginItem)
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出 WorkStop", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "退出 Magicer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         // NSMenu requires a target for @objc actions
         menu.items.forEach { $0.target = self }

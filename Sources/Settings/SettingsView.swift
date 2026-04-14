@@ -22,47 +22,70 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar
+            header
             Divider()
-            content
+            HStack(spacing: 0) {
+                sidebar
+                Divider()
+                content
+            }
         }
-        .frame(minWidth: 620, minHeight: 500)
+        .frame(minWidth: 680, minHeight: 500)
         .background(Color(NSColor.windowBackgroundColor))
     }
 
-    // MARK: - Custom Toolbar
+    // MARK: - Header
 
-    private var toolbar: some View {
-        HStack(spacing: 4) {
-            ForEach(Tab.allCases, id: \.self) { tab in
-                tabButton(tab)
-            }
+    private var header: some View {
+        HStack {
+            Text("Magicer")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.primary)
             Spacer()
-
             offWorkButton
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+        .background(Color(NSColor.windowBackgroundColor))
     }
 
-    private func tabButton(_ tab: Tab) -> some View {
+    // MARK: - Left Sidebar
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Tab.allCases, id: \.self) { tab in
+                sidebarTabButton(tab)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 14)
+        .frame(width: 148)
+        .background(Color(NSColor.controlBackgroundColor))
+    }
+
+    private func sidebarTabButton(_ tab: Tab) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: 8) {
                 Image(systemName: tab.icon)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
+                    .frame(width: 18)
                 Text(tab.rawValue)
                     .font(.system(size: 13, weight: .medium))
+                Spacer()
             }
-            .padding(.horizontal, 13)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .background(selectedTab == tab ? Color.accentColor : Color.clear)
             .foregroundColor(selectedTab == tab ? .white : .secondary)
             .cornerRadius(7)
         }
         .buttonStyle(.plain)
     }
+
+    // MARK: - Off-Work Button
 
     private var offWorkButton: some View {
         Button {
@@ -86,7 +109,6 @@ struct SettingsView: View {
         }
         .buttonStyle(.plain)
         .help(offWork.isActive ? "退出下班模式，恢复提醒计时" : "进入下班模式：黑幕遮屏，暂停所有提醒")
-        .padding(.trailing, 4)
     }
 
     // MARK: - Content
@@ -132,7 +154,6 @@ struct SettingsView: View {
 
     private var rulesTab: some View {
         HSplitView {
-            // Sidebar
             VStack(spacing: 0) {
                 List(selection: $selectedRuleId) {
                     ForEach(store.rules) { rule in
@@ -150,11 +171,8 @@ struct SettingsView: View {
                     selectedRuleId = store.rules.last?.id
                 } label: {
                     HStack {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.accentColor)
-                        Text("新增规则")
-                            .font(.system(size: 13))
-                            .foregroundColor(.accentColor)
+                        Image(systemName: "plus.circle.fill").foregroundColor(.accentColor)
+                        Text("新增规则").font(.system(size: 13)).foregroundColor(.accentColor)
                         Spacer()
                     }
                     .padding(.horizontal, 14)
@@ -163,9 +181,8 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .background(Color(NSColor.controlBackgroundColor))
             }
-            .frame(minWidth: 180, idealWidth: 200, maxWidth: 280)
+            .frame(minWidth: 160, idealWidth: 180, maxWidth: 240)
 
-            // Detail pane
             if let id = selectedRuleId,
                let idx = store.rules.firstIndex(where: { $0.id == id }) {
                 RuleEditView(rule: $store.rules[idx])
@@ -180,12 +197,8 @@ struct SettingsView: View {
             Image(systemName: "square.and.pencil")
                 .font(.system(size: 48))
                 .foregroundColor(Color.secondary.opacity(0.4))
-            Text("选择规则编辑")
-                .font(.title3)
-                .foregroundColor(.secondary)
-            Text("从左侧选择已有规则，或点击 + 新建")
-                .font(.subheadline)
-                .foregroundColor(Color.secondary.opacity(0.7))
+            Text("选择规则编辑").font(.title3).foregroundColor(.secondary)
+            Text("从左侧选择已有规则，或点击 + 新建").font(.subheadline).foregroundColor(Color.secondary.opacity(0.7))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -200,13 +213,9 @@ struct SettingsView: View {
                 .frame(width: 32, height: 32)
                 .background(Color.accentColor.opacity(0.12))
                 .cornerRadius(8)
-
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text(title).font(.system(size: 15, weight: .semibold))
+                Text(subtitle).font(.caption).foregroundColor(.secondary)
             }
         }
     }
@@ -224,20 +233,15 @@ private struct RuleRowView: View {
                 .frame(width: 4, height: 28)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(rule.name)
-                    .font(.body)
-                    .foregroundColor(rule.isEnabled ? .primary : .secondary)
+                Text(rule.name).font(.body).foregroundColor(rule.isEnabled ? .primary : .secondary)
                 Text("每 \(rule.intervalMinutes) 分钟 · \(ThemeColors.find(rule.themeId).name)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(.caption2).foregroundColor(.secondary)
             }
 
             Spacer()
 
             if !rule.isEnabled {
-                Image(systemName: "pause.fill")
-                    .foregroundColor(.secondary)
-                    .font(.caption2)
+                Image(systemName: "pause.fill").foregroundColor(.secondary).font(.caption2)
             }
         }
         .padding(.vertical, 2)

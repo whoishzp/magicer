@@ -101,7 +101,7 @@ class OffWorkManager {
     private func beginActivity() {
         activityToken = ProcessInfo.processInfo.beginActivity(
             options: [.idleSystemSleepDisabled, .idleDisplaySleepDisabled, .userInitiated],
-            reason: "WorkStop 下班模式"
+            reason: "Magicer 下班模式"
         )
     }
 
