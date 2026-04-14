@@ -56,9 +56,8 @@ struct TimestampView: View {
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    quickActionsSection
-                    inputSection
                     currentTimeSection
+                    inputSection
                 }
                 .padding(20)
             }
@@ -92,26 +91,25 @@ struct TimestampView: View {
     // MARK: - Quick Actions
 
     private var quickActionsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(QuickAction.allCases, id: \.self) { action in
-                    Button {
-                        fillQuickAction(action)
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: action.icon).font(.system(size: 10))
-                            Text(action.rawValue).font(.system(size: 11, weight: .medium))
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .foregroundColor(.primary)
-                        .cornerRadius(6)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
+        HStack(spacing: 6) {
+            ForEach(QuickAction.allCases, id: \.self) { action in
+                Button {
+                    fillQuickAction(action)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: action.icon).font(.system(size: 10))
+                        Text(action.rawValue).font(.system(size: 11, weight: .medium))
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.08))
+                    .foregroundColor(.primary)
+                    .cornerRadius(5)
+                    .contentShape(RoundedRectangle(cornerRadius: 5))
                 }
+                .buttonStyle(.plain)
             }
+            Spacer()
         }
     }
 
@@ -123,6 +121,8 @@ struct TimestampView: View {
                 Label("输入时间（支持多种格式）", systemImage: "pencil")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
+                // Quick actions embedded inside input area
+                quickActionsSection
                 ZStack(alignment: .topLeading) {
                     if inputText.isEmpty {
                         Text("试试输入：\n• 1749722690（时间戳）\n• 2025-06-12 18:06:25\n• now / today / yesterday\n• 2025/06/12\n• Jun 12, 2025")
