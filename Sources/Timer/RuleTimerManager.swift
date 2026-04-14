@@ -5,6 +5,9 @@ class RuleTimerManager {
 
     private var timers: [UUID: Timer] = [:]
 
+    // UserDefaults key prefix for persisting last fire time per rule
+    private static let lastFireKeyPrefix = "magicer_last_fire_"
+
     private init() {}
 
     func start() {
@@ -31,13 +34,37 @@ class RuleTimerManager {
 
     // MARK: - Interval Mode
 
+    private func lastFireKey(for rule: ReminderRule) -> String {
+        "\(RuleTimerManager.lastFireKeyPrefix)\(rule.id.uuidString)"
+    }
+
+    private func saveLastFire(for rule: ReminderRule) {
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastFireKey(for: rule))
+    }
+
     private func scheduleInterval(rule: ReminderRule) {
         let interval = TimeInterval(max(1, rule.intervalMinutes) * 60)
-        let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
-            self?.fire(rule: rule)
+
+        // Calculate how long until the NEXT fire, accounting for time elapsed since last fire
+        let key = lastFireKey(for: rule)
+        let now = Date().timeIntervalSince1970
+        let lastFire = UserDefaults.standard.double(forKey: key) // 0 if never saved
+        let elapsed = lastFire > 0 ? now - lastFire : interval  // treat as full cycle if no history
+        let remaining = max(1, interval - elapsed)
+
+        // One-shot timer for the first fire (with remaining delay), then switch to repeating
+        let initialTimer = Timer(timeInterval: remaining, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            self.fire(rule: rule)
+            // Start repeating timer after initial fire
+            let repeating = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
+                self?.fire(rule: rule)
+            }
+            RunLoop.main.add(repeating, forMode: .common)
+            self.timers[rule.id] = repeating
         }
-        RunLoop.main.add(timer, forMode: .common)
-        timers[rule.id] = timer
+        RunLoop.main.add(initialTimer, forMode: .common)
+        timers[rule.id] = initialTimer
     }
 
     // MARK: - Scheduled (Fixed Time) Mode
@@ -86,6 +113,7 @@ class RuleTimerManager {
     // MARK: - Fire
 
     private func fire(rule: ReminderRule) {
+        saveLastFire(for: rule)
         DispatchQueue.main.async {
             OverlayManager.show(rule: rule)
         }
