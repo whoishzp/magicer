@@ -58,6 +58,7 @@ struct TimestampView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     currentTimeSection
                     inputSection
+                    parseResultSection
                 }
                 .padding(20)
             }
@@ -209,8 +210,11 @@ struct TimestampView: View {
             .background(Color.accentColor.opacity(0.05))
             .cornerRadius(8)
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor.opacity(0.15), lineWidth: 1))
+        }
+    }
 
-            // Parse results
+    private var parseResultSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
             if !parseError.isEmpty {
                 Text("❌ \(parseError)").font(.caption).foregroundColor(.red).padding(8)
                     .background(Color.red.opacity(0.07)).cornerRadius(6)
