@@ -2,7 +2,7 @@
 
 > 工作中断提醒 + 开发者工具箱 — macOS App
 
-[![Version](https://img.shields.io/badge/version-1.58.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.59.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -179,6 +179,13 @@ git tag v1.48.0 && git push origin v1.48.0
 ```
 
 ## 变更日志
+
+### v1.59.0（2026-04-15）
+
+- 全局快捷键同时注册 global+local monitor：app 在后台和前台均可触发
+- 录制模式激活时标记 `isAnyRecording`，避免录制期间误触发已配置的快捷键
+- 系统设置快捷键区块增加「输入监控」权限状态提示：无权限时显示橙色警告条 + 「前往设置」按钮
+- `HotkeyManager.start()` 启动时自动调用 `CGRequestListenEventAccess()` 申请输入监控权限
 
 ### v1.58.0（2026-04-15）
 
