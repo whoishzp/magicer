@@ -1,4 +1,77 @@
 import SwiftUI
+import AppKit
+
+// MARK: - Shortcut Recorder
+
+/// A button-style control that captures the next key combination pressed.
+struct ShortcutRecorderView: NSViewRepresentable {
+    @Binding var isRecording: Bool
+    var onCapture: (OffWorkShortcut) -> Void
+
+    func makeNSView(context: Context) -> RecorderField {
+        let v = RecorderField()
+        v.onCapture = onCapture
+        v.onRecordingChange = { [weak v] recording in
+            // synchronise binding back to SwiftUI
+            DispatchQueue.main.async {
+                if recording { v?.becomeFirstResponder() }
+            }
+        }
+        return v
+    }
+
+    func updateNSView(_ nsView: RecorderField, context: Context) {
+        if isRecording && !nsView.isRecording {
+            nsView.startRecording()
+        } else if !isRecording && nsView.isRecording {
+            nsView.stopRecording()
+        }
+    }
+
+    // Invisible NSView that becomes first responder to capture raw keyDown
+    class RecorderField: NSView {
+        var isRecording = false
+        var onCapture: ((OffWorkShortcut) -> Void)?
+        var onRecordingChange: ((Bool) -> Void)?
+
+        override var acceptsFirstResponder: Bool { true }
+
+        func startRecording() {
+            isRecording = true
+            window?.makeFirstResponder(self)
+            onRecordingChange?(true)
+        }
+
+        func stopRecording() {
+            isRecording = false
+            onRecordingChange?(false)
+        }
+
+        override func keyDown(with event: NSEvent) {
+            guard isRecording else { super.keyDown(with: event); return }
+
+            // Escape cancels recording
+            if event.keyCode == 53 {
+                stopRecording()
+                return
+            }
+
+            let relevant: NSEvent.ModifierFlags = [.command, .shift, .option, .control]
+            let mods = event.modifierFlags.intersection(relevant)
+            // Require at least one modifier key
+            guard !mods.isEmpty else { return }
+
+            let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
+            guard !key.isEmpty else { return }
+
+            let shortcut = OffWorkShortcut(key: key, modifiers: mods.rawValue)
+            stopRecording()
+            onCapture?(shortcut)
+        }
+    }
+}
+
+// MARK: - AppSettingsView
 
 struct AppSettingsView: View {
     var embedded: Bool = false
@@ -9,6 +82,7 @@ struct AppSettingsView: View {
     @State private var currentPassword: String = ""
     @State private var showError: String? = nil
     @State private var showSuccess = false
+    @State private var isRecordingShortcut = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -36,6 +110,9 @@ struct AppSettingsView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     // Startup commands section
                     startupCommandsSection
+
+                    // Off-work shortcut section
+                    shortcutSection
 
                     // Off-work password section
                     GroupBox {
@@ -112,6 +189,69 @@ struct AppSettingsView: View {
         }
         .frame(minWidth: embedded ? 0 : 440, minHeight: embedded ? 0 : 360)
         .frame(maxWidth: embedded ? .infinity : 440, maxHeight: embedded ? .infinity : 360)
+    }
+
+    // MARK: - Shortcut Section
+
+    private var shortcutSection: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 14) {
+                Label("下班快捷键", systemImage: "keyboard.fill")
+                    .font(.subheadline.bold())
+                    .foregroundColor(.primary)
+
+                Text("设置后，在任意程序中按下组合键即可快速进入/退出下班模式。需要至少一个修饰键（⌘ ⌥ ⇧ ⌃）。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Divider()
+
+                HStack(spacing: 12) {
+                    // Display current shortcut
+                    Text(settings.offWorkShortcut?.displayString ?? "未设置")
+                        .font(.system(size: 14, weight: .medium, design: .monospaced))
+                        .foregroundColor(settings.offWorkShortcut != nil ? .primary : .secondary)
+                        .frame(minWidth: 80, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(isRecordingShortcut ? Color.accentColor : Color(NSColor.separatorColor), lineWidth: 1)
+                        )
+
+                    if isRecordingShortcut {
+                        Text("按下组合键，Esc 取消")
+                            .font(.caption)
+                            .foregroundColor(.accentColor)
+                        // Hidden recorder that captures key events
+                        ShortcutRecorderView(isRecording: $isRecordingShortcut) { captured in
+                            settings.offWorkShortcut = captured
+                            isRecordingShortcut = false
+                        }
+                        .frame(width: 1, height: 1)
+                        .opacity(0.01)
+                    } else {
+                        Button(settings.offWorkShortcut != nil ? "重新录制" : "录制") {
+                            isRecordingShortcut = true
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        if settings.offWorkShortcut != nil {
+                            Button("清除") {
+                                settings.offWorkShortcut = nil
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .padding(4)
+        }
     }
 
     // MARK: - Startup Commands Section

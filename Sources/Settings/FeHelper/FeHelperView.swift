@@ -2,6 +2,8 @@ import SwiftUI
 import CryptoKit
 
 struct FeHelperView: View {
+    @ObservedObject private var offWork = OffWorkState.shared
+    @ObservedObject private var settings = AppSettings.shared
     enum Tool: String, CaseIterable {
         case jsonBeautify = "JSON美化"
         case jsonDiff     = "JSON比对"
@@ -37,10 +39,42 @@ struct FeHelperView: View {
                 toolTabButton(tool)
             }
             Spacer()
+            offWorkQuickButton
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
         .background(Color(NSColor.controlBackgroundColor))
+    }
+
+    private var offWorkQuickButton: some View {
+        Button {
+            if offWork.isActive {
+                OffWorkManager.shared.exit(restore: true)
+            } else {
+                OffWorkManager.shared.enter()
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: offWork.isActive ? "moon.zzz.fill" : "moon.zzz")
+                    .font(.system(size: 11, weight: .medium))
+                Text(offWork.isActive ? "取消下班" : "下班")
+                    .font(.system(size: 12, weight: .semibold))
+                if let sc = settings.offWorkShortcut {
+                    Text(sc.displayString)
+                        .font(.system(size: 10, weight: .regular, design: .monospaced))
+                        .opacity(0.75)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(offWork.isActive ? Color.orange : Color(NSColor.systemRed))
+            .foregroundColor(.white)
+            .cornerRadius(7)
+        }
+        .buttonStyle(.plain)
+        .help(offWork.isActive
+              ? "退出下班模式，恢复提醒计时"
+              : "进入下班模式：黑幕遮屏，暂停所有提醒")
     }
 
     private func toolTabButton(_ tool: Tool) -> some View {

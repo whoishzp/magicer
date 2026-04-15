@@ -19,7 +19,8 @@ alwaysApply: true
 ## DMG 管理规则
 
 - 项目根目录和 `dist/` 目录各只保留**最新一个** `.dmg` 文件
-- `release.sh` 脚本会自动清理旧 DMG，但手动构建时需注意清理
+- **每次打包（含手动构建）必须在桌面放一份最新 DMG**，旧桌面 DMG 同时清理
+- `release.sh` 脚本会自动完成上述全部清理 + 复制，手动构建时需同步执行：`rm -f ~/Desktop/Magicer-*.dmg && cp *.dmg ~/Desktop/`
 
 ## 版本管理策略
 

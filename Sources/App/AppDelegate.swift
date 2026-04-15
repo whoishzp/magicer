@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar.setup()
         RuleTimerManager.shared.start()
         ReminderHTTPServer.shared.start()
+        HotkeyManager.shared.start()
         StartupCommandRunner.run()
         openSettings()
     }
