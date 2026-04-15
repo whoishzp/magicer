@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 // MARK: - Inline Shortcut Row
 
@@ -59,7 +58,7 @@ private struct ShortcutRow: View {
             guard !mods.isEmpty,
                   let key = event.charactersIgnoringModifiers?.lowercased(),
                   !key.isEmpty else { return event }
-            let sc = OffWorkShortcut(key: key, modifiers: mods.rawValue)
+            let sc = OffWorkShortcut(key: key, modifiers: mods.rawValue, keyCode: event.keyCode)
             stopRecording(captured: sc)
             return nil  // consume the event
         }
@@ -204,31 +203,6 @@ struct AppSettingsView: View {
                 Text("在任意程序中按下组合键即可触发对应功能，需包含至少一个修饰键（⌘ ⌥ ⇧ ⌃）。点击「录制」后直接按组合键即可，Esc 取消。")
                     .font(.caption)
                     .foregroundColor(.secondary)
-
-                // Input Monitoring permission notice
-                if !HotkeyManager.hasInputMonitoringPermission {
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("后台触发需要「输入监控」权限")
-                                .font(.caption.bold())
-                                .foregroundColor(.orange)
-                            Text("在其他应用中使用快捷键时，需前往「系统设置 → 隐私与安全性 → 输入监控」允许 Magicer。")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        Button("前往设置") {
-                            HotkeyManager.openInputMonitoringSettings()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
-                    .padding(8)
-                    .background(Color.orange.opacity(0.08))
-                    .cornerRadius(6)
-                }
 
                 Divider()
 

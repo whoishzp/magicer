@@ -2,7 +2,7 @@
 
 > 工作中断提醒 + 开发者工具箱 — macOS App
 
-[![Version](https://img.shields.io/badge/version-1.59.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.60.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -179,6 +179,14 @@ git tag v1.48.0 && git push origin v1.48.0
 ```
 
 ## 变更日志
+
+### v1.60.0（2026-04-15）
+
+- **Carbon 全局快捷键**：新增 `CarbonBridge` C 扩展模块，通过 `InstallApplicationEventHandler` + `RegisterEventHotKey` 实现真正无权限全局热键
+- 放弃 `NSEvent.addGlobalMonitorForEvents` + Input Monitoring 方案（macOS 15 下授权后仍不可靠）
+- `CarbonHotkeyManager` 改为纯 C 桥接调用，兼容 Swift-C 混合 SPM 多 target 编译
+- 移除系统设置「输入监控」权限提示 UI（Carbon 方案不需要任何额外权限）
+- `Package.swift` 新增 `CarbonBridge` 静态库 target，链接 Carbon.framework
 
 ### v1.59.0（2026-04-15）
 
