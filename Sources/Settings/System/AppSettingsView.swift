@@ -1,73 +1,72 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Shortcut Recorder
+// MARK: - Inline Shortcut Row
 
-/// A button-style control that captures the next key combination pressed.
-struct ShortcutRecorderView: NSViewRepresentable {
-    @Binding var isRecording: Bool
-    var onCapture: (OffWorkShortcut) -> Void
+/// A self-contained row that displays current shortcut + handles recording via NSEvent local monitor.
+private struct ShortcutRow: View {
+    let label: String
+    let hint: String
+    @Binding var shortcut: OffWorkShortcut?
 
-    func makeNSView(context: Context) -> RecorderField {
-        let v = RecorderField()
-        v.onCapture = onCapture
-        v.onRecordingChange = { [weak v] recording in
-            // synchronise binding back to SwiftUI
-            DispatchQueue.main.async {
-                if recording { v?.becomeFirstResponder() }
+    @State private var isRecording = false
+    @State private var localMonitor: Any?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Shortcut badge
+            Text(isRecording ? "请按下组合键…" : (shortcut?.displayString ?? "未设置"))
+                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .foregroundColor(isRecording ? .accentColor : (shortcut != nil ? .primary : .secondary))
+                .frame(minWidth: 100, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(NSColor.controlBackgroundColor))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(isRecording ? Color.accentColor : Color(NSColor.separatorColor),
+                                lineWidth: isRecording ? 1.5 : 1)
+                )
+
+            if isRecording {
+                Button("取消") { stopRecording(captured: nil) }
+                    .buttonStyle(.bordered).controlSize(.small)
+            } else {
+                Button(shortcut != nil ? "重新录制" : "录制") { startRecording() }
+                    .buttonStyle(.bordered).controlSize(.small)
+                if shortcut != nil {
+                    Button("清除") { shortcut = nil }
+                        .buttonStyle(.bordered).controlSize(.small)
+                        .foregroundColor(.red)
+                }
             }
         }
-        return v
     }
 
-    func updateNSView(_ nsView: RecorderField, context: Context) {
-        if isRecording && !nsView.isRecording {
-            nsView.startRecording()
-        } else if !isRecording && nsView.isRecording {
-            nsView.stopRecording()
-        }
-    }
-
-    // Invisible NSView that becomes first responder to capture raw keyDown
-    class RecorderField: NSView {
-        var isRecording = false
-        var onCapture: ((OffWorkShortcut) -> Void)?
-        var onRecordingChange: ((Bool) -> Void)?
-
-        override var acceptsFirstResponder: Bool { true }
-
-        func startRecording() {
-            isRecording = true
-            window?.makeFirstResponder(self)
-            onRecordingChange?(true)
-        }
-
-        func stopRecording() {
-            isRecording = false
-            onRecordingChange?(false)
-        }
-
-        override func keyDown(with event: NSEvent) {
-            guard isRecording else { super.keyDown(with: event); return }
-
-            // Escape cancels recording
+    private func startRecording() {
+        isRecording = true
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Escape → cancel
             if event.keyCode == 53 {
-                stopRecording()
-                return
+                stopRecording(captured: nil)
+                return event
             }
-
             let relevant: NSEvent.ModifierFlags = [.command, .shift, .option, .control]
             let mods = event.modifierFlags.intersection(relevant)
-            // Require at least one modifier key
-            guard !mods.isEmpty else { return }
-
-            let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
-            guard !key.isEmpty else { return }
-
-            let shortcut = OffWorkShortcut(key: key, modifiers: mods.rawValue)
-            stopRecording()
-            onCapture?(shortcut)
+            guard !mods.isEmpty,
+                  let key = event.charactersIgnoringModifiers?.lowercased(),
+                  !key.isEmpty else { return event }
+            let sc = OffWorkShortcut(key: key, modifiers: mods.rawValue)
+            stopRecording(captured: sc)
+            return nil  // consume the event
         }
+    }
+
+    private func stopRecording(captured: OffWorkShortcut?) {
+        isRecording = false
+        if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
+        if let sc = captured { shortcut = sc }
     }
 }
 
@@ -82,7 +81,6 @@ struct AppSettingsView: View {
     @State private var currentPassword: String = ""
     @State private var showError: String? = nil
     @State private var showSuccess = false
-    @State private var isRecordingShortcut = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -195,58 +193,40 @@ struct AppSettingsView: View {
 
     private var shortcutSection: some View {
         GroupBox {
-            VStack(alignment: .leading, spacing: 14) {
-                Label("下班快捷键", systemImage: "keyboard.fill")
+            VStack(alignment: .leading, spacing: 18) {
+                Label("全局快捷键", systemImage: "keyboard.fill")
                     .font(.subheadline.bold())
                     .foregroundColor(.primary)
 
-                Text("设置后，在任意程序中按下组合键即可快速进入/退出下班模式。需要至少一个修饰键（⌘ ⌥ ⇧ ⌃）。")
+                Text("在任意程序中按下组合键即可触发对应功能，需包含至少一个修饰键（⌘ ⌥ ⇧ ⌃）。点击「录制」后直接按组合键即可，Esc 取消。")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
                 Divider()
 
-                HStack(spacing: 12) {
-                    // Display current shortcut
-                    Text(settings.offWorkShortcut?.displayString ?? "未设置")
-                        .font(.system(size: 14, weight: .medium, design: .monospaced))
-                        .foregroundColor(settings.offWorkShortcut != nil ? .primary : .secondary)
-                        .frame(minWidth: 80, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .cornerRadius(6)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(isRecordingShortcut ? Color.accentColor : Color(NSColor.separatorColor), lineWidth: 1)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 16) {
+                        Text("下班模式")
+                            .font(.system(size: 13))
+                            .frame(width: 72, alignment: .leading)
+                        ShortcutRow(
+                            label: "下班模式",
+                            hint: "触发进入/退出下班黑幕",
+                            shortcut: $settings.offWorkShortcut
                         )
+                    }
 
-                    if isRecordingShortcut {
-                        Text("按下组合键，Esc 取消")
-                            .font(.caption)
-                            .foregroundColor(.accentColor)
-                        // Hidden recorder that captures key events
-                        ShortcutRecorderView(isRecording: $isRecordingShortcut) { captured in
-                            settings.offWorkShortcut = captured
-                            isRecordingShortcut = false
-                        }
-                        .frame(width: 1, height: 1)
-                        .opacity(0.01)
-                    } else {
-                        Button(settings.offWorkShortcut != nil ? "重新录制" : "录制") {
-                            isRecordingShortcut = true
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                    Divider()
 
-                        if settings.offWorkShortcut != nil {
-                            Button("清除") {
-                                settings.offWorkShortcut = nil
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                            .foregroundColor(.red)
-                        }
+                    HStack(spacing: 16) {
+                        Text("Fe 助手")
+                            .font(.system(size: 13))
+                            .frame(width: 72, alignment: .leading)
+                        ShortcutRow(
+                            label: "Fe 助手",
+                            hint: "快速打开 Fe 助手面板",
+                            shortcut: $settings.feHelperShortcut
+                        )
                     }
                 }
             }

@@ -5,9 +5,10 @@ import Combine
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    private let kPassword    = "ws_offwork_password"
-    private let kStartupCmds = "ws_startup_commands"
-    private let kShortcut    = "magicer_offwork_shortcut"
+    private let kPassword        = "ws_offwork_password"
+    private let kStartupCmds    = "ws_startup_commands"
+    private let kShortcut        = "magicer_offwork_shortcut"
+    private let kFeHelperShortcut = "magicer_fehelper_shortcut"
 
     @Published var offWorkPassword: String {
         didSet { UserDefaults.standard.set(offWorkPassword, forKey: kPassword) }
@@ -31,6 +32,16 @@ class AppSettings: ObservableObject {
         }
     }
 
+    @Published var feHelperShortcut: OffWorkShortcut? {
+        didSet {
+            if let s = feHelperShortcut, let data = try? JSONEncoder().encode(s) {
+                UserDefaults.standard.set(data, forKey: kFeHelperShortcut)
+            } else {
+                UserDefaults.standard.removeObject(forKey: kFeHelperShortcut)
+            }
+        }
+    }
+
     private init() {
         offWorkPassword = UserDefaults.standard.string(forKey: kPassword) ?? ""
         if let data = UserDefaults.standard.data(forKey: kStartupCmds),
@@ -44,6 +55,12 @@ class AppSettings: ObservableObject {
             offWorkShortcut = sc
         } else {
             offWorkShortcut = nil
+        }
+        if let data = UserDefaults.standard.data(forKey: kFeHelperShortcut),
+           let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: data) {
+            feHelperShortcut = sc
+        } else {
+            feHelperShortcut = nil
         }
     }
 

@@ -4,6 +4,10 @@ struct SettingsView: View {
     @State private var selectedTab: Tab = .appSettings
     @ObservedObject private var offWork = OffWorkState.shared
 
+    // Switch to Fe助手 tab when global hotkey fires
+    private let feHelperPublisher = NotificationCenter.default
+        .publisher(for: .openFeHelperPanel)
+
     enum Tab: String, CaseIterable {
         case appSettings = "系统设置"
         case reminder    = "定时提醒"
@@ -30,6 +34,9 @@ struct SettingsView: View {
             ToolbarItem(placement: .primaryAction) {
                 offWorkButton
             }
+        }
+        .onReceive(feHelperPublisher) { _ in
+            withAnimation(.easeInOut(duration: 0.15)) { selectedTab = .feHelper }
         }
     }
 

@@ -2,7 +2,7 @@
 
 > 工作中断提醒 + 开发者工具箱 — macOS App
 
-[![Version](https://img.shields.io/badge/version-1.57.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.58.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -179,6 +179,14 @@ git tag v1.48.0 && git push origin v1.48.0
 ```
 
 ## 变更日志
+
+### v1.58.0（2026-04-15）
+
+- 系统设置「全局快捷键」区块新增两条独立快捷键配置：「下班模式」和「Fe 助手」
+- 录制逻辑重写：使用 `NSEvent.addLocalMonitorForEvents`，点击「录制」后直接按组合键即可，Esc 取消，支持重新录制和清除
+- Fe 助手全局快捷键：在任意程序中按下后自动将设置窗口置顶并切换到 Fe 助手 Tab
+- 下班模式全局快捷键：在任意程序中按下后触发进入/退出下班黑幕（应用后台同样生效）
+- 移除 Fe 助手工具栏中误加的「下班」快捷按钮（功能已统一在系统设置 + 主窗口工具栏管理）
 
 ### v1.57.0（2026-04-15）
 

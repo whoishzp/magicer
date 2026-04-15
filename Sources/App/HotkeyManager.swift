@@ -1,40 +1,57 @@
 import AppKit
 import Combine
 
-/// Listens for the user-configured off-work global shortcut.
-/// Uses NSEvent.addGlobalMonitorForEvents (fires when the app is NOT frontmost).
-/// No Accessibility permission is required to receive (non-consuming) key-down events.
+extension Notification.Name {
+    static let openFeHelperPanel = Notification.Name("magicer.openFeHelperPanel")
+}
+
+/// Listens for user-configured global shortcuts.
+/// Uses NSEvent.addGlobalMonitorForEvents (fires when the app is NOT frontmost — no Accessibility permission needed).
 final class HotkeyManager {
     static let shared = HotkeyManager()
 
-    private var globalMonitor: Any?
-    private var cancellable: AnyCancellable?
+    private var offWorkMonitor:  Any?
+    private var feHelperMonitor: Any?
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {}
 
     func start() {
-        cancellable = AppSettings.shared.$offWorkShortcut
+        AppSettings.shared.$offWorkShortcut
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] shortcut in
-                self?.unregister()
-                if let shortcut { self?.register(shortcut) }
+            .sink { [weak self] sc in
+                if let m = self?.offWorkMonitor { NSEvent.removeMonitor(m); self?.offWorkMonitor = nil }
+                if let sc { self?.offWorkMonitor = Self.makeMonitor(for: sc) { Self.handleOffWork() } }
             }
+            .store(in: &cancellables)
+
+        AppSettings.shared.$feHelperShortcut
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] sc in
+                if let m = self?.feHelperMonitor { NSEvent.removeMonitor(m); self?.feHelperMonitor = nil }
+                if let sc { self?.feHelperMonitor = Self.makeMonitor(for: sc) { Self.handleFeHelper() } }
+            }
+            .store(in: &cancellables)
     }
 
-    private func register(_ shortcut: OffWorkShortcut) {
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+    // MARK: - Private helpers
+
+    private static func makeMonitor(for shortcut: OffWorkShortcut, action: @escaping () -> Void) -> Any? {
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
             guard shortcut.matches(event) else { return }
-            DispatchQueue.main.async {
-                if OffWorkManager.shared.isActive {
-                    OffWorkManager.shared.exit(restore: true)
-                } else {
-                    OffWorkManager.shared.enter()
-                }
-            }
+            DispatchQueue.main.async { action() }
         }
     }
 
-    private func unregister() {
-        if let m = globalMonitor { NSEvent.removeMonitor(m); globalMonitor = nil }
+    private static func handleOffWork() {
+        if OffWorkManager.shared.isActive {
+            OffWorkManager.shared.exit(restore: true)
+        } else {
+            OffWorkManager.shared.enter()
+        }
+    }
+
+    private static func handleFeHelper() {
+        NotificationCenter.default.post(name: .openFeHelperPanel, object: nil)
     }
 }

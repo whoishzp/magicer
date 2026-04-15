@@ -12,6 +12,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ReminderHTTPServer.shared.start()
         HotkeyManager.shared.start()
         StartupCommandRunner.run()
+        // Open Fe助手 panel via global hotkey: bring window first, then switch tab
+        NotificationCenter.default.addObserver(
+            forName: .openFeHelperPanel, object: nil, queue: .main
+        ) { [weak self] notification in
+            self?.openSettings()
+            // SettingsView will also receive this notification and switch the tab
+        }
         openSettings()
     }
 
