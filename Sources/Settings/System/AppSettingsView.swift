@@ -292,7 +292,22 @@ struct AppSettingsView: View {
                                 Spacer()
                                 Button {
                                     NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(cmd.command, forType: .string)
+                                    let ok = NSPasteboard.general.setString(cmd.command, forType: .string)
+                                    let name = cmd.label.trimmingCharacters(in: .whitespaces).isEmpty
+                                        ? String(cmd.command.prefix(40))
+                                        : cmd.label
+                                    feedbackDismissWorkItem?.cancel()
+                                    manualRunFeedback = ManualRunFeedback(
+                                        success: ok,
+                                        title: ok ? "已复制到剪贴板" : "未能复制",
+                                        subtitle: ok
+                                            ? "「\(name)」的完整 shell 已写入，可在终端或其他应用粘贴。"
+                                            : "剪贴板写入失败，请重试。"
+                                    )
+                                    let work = DispatchWorkItem { manualRunFeedback = nil }
+                                    feedbackDismissWorkItem = work
+                                    let seconds: TimeInterval = ok ? 3 : 5
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
                                 } label: {
                                     Image(systemName: "doc.on.doc")
                                         .foregroundColor(.secondary)

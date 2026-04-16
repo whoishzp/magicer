@@ -5,6 +5,13 @@ alwaysApply: true
 
 # Magicer 项目规则
 
+## Cursor Good 规则（强制）
+
+在 **Cursor** 中为本仓库工作时，**必须**加载并遵循全局 **`~/.cursor/rules/main.mdc`** 中关于 **CursorGood** 的全部要求（含：任务阶段结束、等待用户下一步、每轮交互闭环前须调用 MCP **`user-cursor-good` → `CursorGood`** 等）。
+
+- 若当前环境已启用 **`user-cursor-good`** MCP：**禁止**在未调用 **`CursorGood`** 的情况下结束对话回合（空返回时按 `main.mdc` 再次轮询）。
+- 本条款与 `main.mdc` 冲突时，以 **`main.mdc`** 为准；本条款仅强调在本仓库内**不得省略** Cursor Good 流程。
+
 ## README 同步规则（强制）
 
 **每次完成功能修改、发布新版本后，必须同步更新 `README.md`**，包括但不限于：
