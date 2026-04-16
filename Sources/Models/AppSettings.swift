@@ -7,7 +7,6 @@ class AppSettings: ObservableObject {
 
     private let kPassword        = "ws_offwork_password"
     private let kStartupCmds    = "ws_startup_commands"
-    private let kStartupCmdLogs = "ws_startup_command_logs"
     private let kShortcut        = "magicer_offwork_shortcut"
     private let kFeHelperShortcut = "magicer_fehelper_shortcut"
 
@@ -19,15 +18,6 @@ class AppSettings: ObservableObject {
         didSet {
             if let data = try? JSONEncoder().encode(startupCommands) {
                 UserDefaults.standard.set(data, forKey: kStartupCmds)
-            }
-        }
-    }
-
-    /// 最近若干条启动/手动执行记录（时间倒序）
-    @Published var startupCommandLogs: [StartupCommandLogEntry] {
-        didSet {
-            if let data = try? JSONEncoder().encode(startupCommandLogs) {
-                UserDefaults.standard.set(data, forKey: kStartupCmdLogs)
             }
         }
     }
@@ -60,12 +50,8 @@ class AppSettings: ObservableObject {
         } else {
             startupCommands = []
         }
-        if let data = UserDefaults.standard.data(forKey: kStartupCmdLogs),
-           let logs = try? JSONDecoder().decode([StartupCommandLogEntry].self, from: data) {
-            startupCommandLogs = logs
-        } else {
-            startupCommandLogs = []
-        }
+        // v1.62 及更早版本曾持久化执行记录，已不再使用
+        UserDefaults.standard.removeObject(forKey: "ws_startup_command_logs")
         if let data = UserDefaults.standard.data(forKey: kShortcut),
            let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: data) {
             offWorkShortcut = sc
@@ -81,18 +67,4 @@ class AppSettings: ObservableObject {
     }
 
     var hasPassword: Bool { !offWorkPassword.isEmpty }
-
-    private let maxStartupCommandLogs = 50
-
-    func appendStartupCommandLog(_ entry: StartupCommandLogEntry) {
-        var next = [entry] + startupCommandLogs
-        if next.count > maxStartupCommandLogs {
-            next = Array(next.prefix(maxStartupCommandLogs))
-        }
-        startupCommandLogs = next
-    }
-
-    func clearStartupCommandLogs() {
-        startupCommandLogs = []
-    }
 }

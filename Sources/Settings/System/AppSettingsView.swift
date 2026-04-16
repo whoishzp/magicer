@@ -195,8 +195,8 @@ struct AppSettingsView: View {
                 .padding(20)
             }
         }
-        .frame(minWidth: embedded ? 0 : 440, minHeight: embedded ? 0 : 460)
-        .frame(maxWidth: embedded ? .infinity : 440, maxHeight: embedded ? .infinity : 520)
+        .frame(minWidth: embedded ? 0 : 440, minHeight: embedded ? 0 : 380)
+        .frame(maxWidth: embedded ? .infinity : 440, maxHeight: embedded ? .infinity : 460)
     }
 
     // MARK: - Shortcut Section
@@ -251,14 +251,6 @@ struct AppSettingsView: View {
     @State private var manualRunFeedback: ManualRunFeedback?
     @State private var feedbackDismissWorkItem: DispatchWorkItem?
 
-    private static let logTimeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = .current
-        f.dateStyle = .short
-        f.timeStyle = .medium
-        return f
-    }()
-
     private var startupCommandsSection: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 14) {
@@ -298,19 +290,17 @@ struct AppSettingsView: View {
                                 }
                                 Spacer()
                                 Button {
-                                    StartupCommandRunner.runNow(cmd) { entry in
-                                        let name = entry.label.trimmingCharacters(in: .whitespaces).isEmpty
-                                            ? String(entry.commandPreview.prefix(40))
-                                            : entry.label
+                                    StartupCommandRunner.runNow(cmd) { outcome in
+                                        let name = outcome.label.trimmingCharacters(in: .whitespaces).isEmpty
+                                            ? String(outcome.commandPreview.prefix(40))
+                                            : outcome.label
                                         feedbackDismissWorkItem?.cancel()
                                         manualRunFeedback = ManualRunFeedback(
-                                            success: entry.success,
-                                            title: entry.success ? "「\(name)」已执行完成" : "「\(name)」执行未成功",
-                                            subtitle: entry.success
-                                                ? "退出码 \(entry.exitCode ?? 0)。详情见下方执行记录。"
-                                                : [entry.errorDetail, "详情见下方执行记录。"]
-                                                    .compactMap { $0 }
-                                                    .joined(separator: " ")
+                                            success: outcome.success,
+                                            title: outcome.success ? "「\(name)」已执行完成" : "「\(name)」执行未成功",
+                                            subtitle: outcome.success
+                                                ? "进程已结束，退出码 \(outcome.exitCode ?? 0)。"
+                                                : (outcome.errorDetail ?? "")
                                         )
                                         let work = DispatchWorkItem { manualRunFeedback = nil }
                                         feedbackDismissWorkItem = work
@@ -365,85 +355,6 @@ struct AppSettingsView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(fb.success ? Color.green.opacity(0.25) : Color.orange.opacity(0.35), lineWidth: 1)
                     )
-                }
-
-                Divider()
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Label("执行记录", systemImage: "list.bullet.rectangle")
-                            .font(.caption.weight(.semibold))
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        if !settings.startupCommandLogs.isEmpty {
-                            Button("清空记录") {
-                                settings.clearStartupCommandLogs()
-                            }
-                            .buttonStyle(.borderless)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
-                    }
-                    Text("手动运行与 App 启动时执行的命令都会记录（最多保留 50 条）。")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-
-                    if settings.startupCommandLogs.isEmpty {
-                        Text("暂无记录")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 6)
-                    } else {
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(Array(settings.startupCommandLogs.enumerated()), id: \.element.id) { index, log in
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                            Text(Self.logTimeFormatter.string(from: log.date))
-                                                .font(.system(size: 11, design: .monospaced))
-                                                .foregroundColor(.secondary)
-                                            Text(log.source == .manual ? "手动" : "启动")
-                                                .font(.system(size: 10, weight: .medium))
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(Color(NSColor.controlBackgroundColor))
-                                                .cornerRadius(4)
-                                            Text(log.label.isEmpty ? "(无标签)" : log.label)
-                                                .font(.system(size: 12, weight: .medium))
-                                                .lineLimit(1)
-                                            Spacer(minLength: 0)
-                                            if log.success {
-                                                Text("成功")
-                                                    .font(.caption)
-                                                    .foregroundColor(.green)
-                                            } else {
-                                                Text("失败")
-                                                    .font(.caption)
-                                                    .foregroundColor(.orange)
-                                            }
-                                        }
-                                        Text(
-                                            [
-                                                log.exitCode.map { "退出码 \($0)" },
-                                                log.errorDetail
-                                            ]
-                                            .compactMap { $0 }
-                                            .joined(separator: " · ")
-                                        )
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(2)
-                                    }
-                                    if index < settings.startupCommandLogs.count - 1 {
-                                        Divider()
-                                    }
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(maxHeight: 200)
-                    }
                 }
 
                 Divider()
