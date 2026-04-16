@@ -280,6 +280,14 @@ struct AppSettingsView: View {
                                 }
                                 Spacer()
                                 Button {
+                                    StartupCommandRunner.runNow(cmd)
+                                } label: {
+                                    Image(systemName: "play.circle.fill")
+                                        .foregroundColor(.accentColor)
+                                }
+                                .buttonStyle(.plain)
+                                .help("立即执行此命令")
+                                Button {
                                     settings.startupCommands.removeAll { $0.id == cmd.id }
                                 } label: {
                                     Image(systemName: "minus.circle.fill")
