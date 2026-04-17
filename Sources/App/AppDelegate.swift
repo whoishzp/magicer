@@ -6,6 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        setupMainMenu()
         menuBar.onOpenSettings = { [weak self] in self?.openSettings() }
         menuBar.setup()
         RuleTimerManager.shared.start()
@@ -30,6 +31,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         return .terminateNow
+    }
+
+    // MARK: - Main Menu
+
+    private func setupMainMenu() {
+        let mainMenu = NSMenu()
+
+        // ── App menu ────────────────────────────────────────────────────────
+        let appItem = NSMenuItem()
+        mainMenu.addItem(appItem)
+        let appMenu = NSMenu()
+        appItem.submenu = appMenu
+        appMenu.addItem(NSMenuItem(
+            title: "退出 Magicer",
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        ))
+
+        // ── Window menu ─────────────────────────────────────────────────────
+        let windowItem = NSMenuItem()
+        mainMenu.addItem(windowItem)
+        let windowMenu = NSMenu(title: "Window")
+        windowItem.submenu = windowMenu
+        windowMenu.addItem(NSMenuItem(
+            title: "最小化",
+            action: #selector(NSWindow.miniaturize(_:)),
+            keyEquivalent: "m"
+        ))
+        windowMenu.addItem(NSMenuItem(
+            title: "关闭窗口",
+            action: #selector(NSWindow.performClose(_:)),
+            keyEquivalent: "w"
+        ))
+
+        NSApp.mainMenu = mainMenu
+        NSApp.windowsMenu = windowMenu
     }
 
     // MARK: - Settings Window
