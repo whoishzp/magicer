@@ -81,6 +81,61 @@ private struct ManualRunFeedback: Equatable {
     var subtitle: String
 }
 
+// MARK: - AppearanceModeCard
+
+private struct AppearanceModeCard: View {
+    let mode: AppearanceMode
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(previewBackground)
+                        .frame(width: 72, height: 48)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(isSelected ? Color.accentColor : Color(NSColor.separatorColor),
+                                        lineWidth: isSelected ? 2 : 1)
+                        )
+                    previewIcon
+                }
+                Text(mode.displayName)
+                    .font(.system(size: 11))
+                    .foregroundColor(isSelected ? .accentColor : .secondary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var previewBackground: Color {
+        switch mode {
+        case .system: return Color(NSColor.windowBackgroundColor)
+        case .light:  return Color(NSColor.white)
+        case .dark:   return Color(NSColor(red: 0.18, green: 0.18, blue: 0.20, alpha: 1))
+        }
+    }
+
+    @ViewBuilder private var previewIcon: some View {
+        switch mode {
+        case .system:
+            Image(systemName: "circle.lefthalf.filled")
+                .font(.system(size: 20))
+                .foregroundColor(.secondary)
+        case .light:
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: 20))
+                .foregroundColor(.orange)
+        case .dark:
+            Image(systemName: "moon.fill")
+                .font(.system(size: 20))
+                .foregroundColor(.blue)
+        }
+    }
+}
+
 // MARK: - AppSettingsView
 
 struct AppSettingsView: View {
@@ -117,6 +172,9 @@ struct AppSettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // Appearance section
+                    appearanceSection
+
                     // Startup commands section
                     startupCommandsSection
 
@@ -198,6 +256,33 @@ struct AppSettingsView: View {
         }
         .frame(minWidth: embedded ? 0 : 440, minHeight: embedded ? 0 : 380)
         .frame(maxWidth: embedded ? .infinity : 440, maxHeight: embedded ? .infinity : 460)
+    }
+
+    // MARK: - Appearance Section
+
+    private var appearanceSection: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 14) {
+                Label("外观模式", systemImage: "circle.lefthalf.filled")
+                    .font(.subheadline.bold())
+                    .foregroundColor(.primary)
+
+                Text("选择应用的显示外观，深色模式下界面将使用更柔和的暗色调。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Divider()
+
+                HStack(spacing: 12) {
+                    ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                        AppearanceModeCard(mode: mode, isSelected: settings.appearanceMode == mode) {
+                            settings.appearanceMode = mode
+                        }
+                    }
+                }
+            }
+            .padding(4)
+        }
     }
 
     // MARK: - Shortcut Section

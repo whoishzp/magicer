@@ -1,5 +1,30 @@
 import Foundation
 import Combine
+import AppKit
+
+// MARK: - AppearanceMode
+
+enum AppearanceMode: String, CaseIterable, Codable {
+    case system = "system"
+    case light  = "light"
+    case dark   = "dark"
+
+    var displayName: String {
+        switch self {
+        case .system: return "跟随系统"
+        case .light:  return "浅色"
+        case .dark:   return "深色"
+        }
+    }
+
+    var nsAppearance: NSAppearance? {
+        switch self {
+        case .system: return nil
+        case .light:  return NSAppearance(named: .aqua)
+        case .dark:   return NSAppearance(named: .darkAqua)
+        }
+    }
+}
 
 /// App-level settings (password, startup commands, etc.)
 class AppSettings: ObservableObject {
@@ -9,6 +34,7 @@ class AppSettings: ObservableObject {
     private let kStartupCmds    = "ws_startup_commands"
     private let kShortcut        = "magicer_offwork_shortcut"
     private let kFeHelperShortcut = "magicer_fehelper_shortcut"
+    private let kAppearanceMode  = "magicer_appearance_mode"
 
     @Published var offWorkPassword: String {
         didSet { UserDefaults.standard.set(offWorkPassword, forKey: kPassword) }
@@ -42,6 +68,13 @@ class AppSettings: ObservableObject {
         }
     }
 
+    @Published var appearanceMode: AppearanceMode = .system {
+        didSet {
+            UserDefaults.standard.set(appearanceMode.rawValue, forKey: kAppearanceMode)
+            NSApp.appearance = appearanceMode.nsAppearance
+        }
+    }
+
     private init() {
         offWorkPassword = UserDefaults.standard.string(forKey: kPassword) ?? ""
         if let data = UserDefaults.standard.data(forKey: kStartupCmds),
@@ -64,6 +97,11 @@ class AppSettings: ObservableObject {
         } else {
             feHelperShortcut = nil
         }
+        if let raw = UserDefaults.standard.string(forKey: kAppearanceMode),
+           let mode = AppearanceMode(rawValue: raw) {
+            appearanceMode = mode
+        }
+        NSApp.appearance = appearanceMode.nsAppearance
     }
 
     var hasPassword: Bool { !offWorkPassword.isEmpty }
