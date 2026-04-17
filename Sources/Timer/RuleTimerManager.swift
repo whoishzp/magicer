@@ -51,7 +51,7 @@ class RuleTimerManager {
         let key = lastFireKey(for: rule)
         let now = Date().timeIntervalSince1970
         let lastFire = UserDefaults.standard.double(forKey: key) // 0 if never saved
-        let elapsed = lastFire > 0 ? now - lastFire : interval  // treat as full cycle if no history
+        let elapsed = lastFire > 0 ? now - lastFire : 0  // no history → fresh start, wait full interval
         let remaining = max(1, interval - elapsed)
 
         // One-shot timer for the first fire (with remaining delay), then switch to repeating
