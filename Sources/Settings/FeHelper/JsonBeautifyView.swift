@@ -118,18 +118,58 @@ struct JsonBeautifyView: View {
         do { _ = try JSONSerialization.jsonObject(with: data) } catch { directError = error }
 
         // 2. Input may be a JSON-string-escaped payload (literal \n, \", etc.)
-        //    Wrap in quotes, decode as JSON string to unescape, then re-parse.
+        //    Wrap in quotes → decode as JSON string → re-escape control chars
+        //    that ended up inside JSON string values → parse as JSON.
         let wrapped = "\"" + trimmed + "\""
         if let wData = wrapped.data(using: .utf8),
-           let unescaped = try? JSONSerialization.jsonObject(with: wData) as? String,
-           let inner = unescaped.data(using: .utf8),
-           let obj = try? JSONSerialization.jsonObject(with: inner) {
-            parsedJson = deepParseNestedJsonStrings(obj)
-            return
+           let unescaped = try? JSONSerialization.jsonObject(with: wData) as? String {
+            let reEscaped = reEscapeControlCharsInStringValues(unescaped)
+            if let inner = reEscaped.data(using: .utf8),
+               let obj = try? JSONSerialization.jsonObject(with: inner) {
+                parsedJson = deepParseNestedJsonStrings(obj)
+                return
+            }
         }
 
         error = directError?.localizedDescription ?? "JSON 解析失败"
         parsedJson = nil
+    }
+
+    /// Scans a JSON text and re-escapes any bare control characters (U+0000–U+001F)
+    /// that appear inside JSON string values (e.g., actual LF from a prior unescape step).
+    /// Characters outside string values (structural whitespace) are passed through unchanged.
+    private func reEscapeControlCharsInStringValues(_ json: String) -> String {
+        var result = ""
+        result.reserveCapacity(json.count + 64)
+        var insideString = false
+        var prevWasBackslash = false
+        for ch in json {
+            if insideString {
+                if prevWasBackslash {
+                    result.append(ch)
+                    prevWasBackslash = false
+                } else if ch == "\\" {
+                    result.append(ch)
+                    prevWasBackslash = true
+                } else if ch == "\"" {
+                    insideString = false
+                    result.append(ch)
+                } else if let ascii = ch.asciiValue, ascii < 0x20 {
+                    switch ch {
+                    case "\n": result += "\\n"
+                    case "\r": result += "\\r"
+                    case "\t": result += "\\t"
+                    default:   result += String(format: "\\u%04X", ascii)
+                    }
+                } else {
+                    result.append(ch)
+                }
+            } else {
+                if ch == "\"" { insideString = true }
+                result.append(ch)
+            }
+        }
+        return result
     }
 
     /// Recursively walks the parsed JSON and replaces any string value that is
