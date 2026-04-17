@@ -99,13 +99,37 @@ struct JsonBeautifyView: View {
 
     private func formatJSON() {
         error = ""
-        guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        guard let data = input.data(using: .utf8),
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard let data = trimmed.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: data) else {
             error = "JSON 解析失败"
             parsedJson = nil
             return
         }
-        parsedJson = obj
+        parsedJson = deepParseNestedJsonStrings(obj)
+    }
+
+    /// Recursively walks the parsed JSON and replaces any string value that is
+    /// itself valid JSON with the parsed object, enabling nested tree rendering.
+    private func deepParseNestedJsonStrings(_ value: Any) -> Any {
+        if let dict = value as? [String: Any] {
+            return dict.mapValues { deepParseNestedJsonStrings($0) }
+        }
+        if let arr = value as? [Any] {
+            return arr.map { deepParseNestedJsonStrings($0) }
+        }
+        if let str = value as? String {
+            let candidate = str.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard (candidate.hasPrefix("{") && candidate.hasSuffix("}"))
+               || (candidate.hasPrefix("[") && candidate.hasSuffix("]")) else {
+                return str
+            }
+            if let data = candidate.data(using: .utf8),
+               let nested = try? JSONSerialization.jsonObject(with: data) {
+                return deepParseNestedJsonStrings(nested)
+            }
+        }
+        return value
     }
 }
