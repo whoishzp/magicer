@@ -2,7 +2,7 @@
 
 > 工作中断提醒 + 开发者工具箱 — macOS App
 
-[![Version](https://img.shields.io/badge/version-1.73.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.74.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -183,6 +183,10 @@ git tag v1.48.0 && git push origin v1.48.0
 ```
 
 ## 变更日志
+
+### v1.74.0（2026-04-17）
+
+- **JSON 美化**：重构解析策略为 5 级 fallback — ① 直接解析 ② 修复字符串内裸控制字符 ③ 展开字符串外字面量 `\n` ④ 全转义格式（`\"`+wrapping）⑤ 手动解码所有 `\x` 逃逸序列；覆盖全部常见格式变体
 
 ### v1.73.0（2026-04-17）
 

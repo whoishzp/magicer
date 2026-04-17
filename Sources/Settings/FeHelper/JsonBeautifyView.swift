@@ -103,46 +103,80 @@ struct JsonBeautifyView: View {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        guard let data = trimmed.data(using: .utf8) else {
-            error = "输入包含无效字符"
-            parsedJson = nil
-            return
+        // Strategy 1: direct parse
+        if let obj = jsonParse(trimmed) {
+            parsedJson = deepParseNestedJsonStrings(obj); return
         }
 
-        // 1. Try direct parse
-        var directError: Error?
-        if let obj = try? { () throws -> Any in try JSONSerialization.jsonObject(with: data) }() {
-            parsedJson = deepParseNestedJsonStrings(obj)
-            return
-        }
-        do { _ = try JSONSerialization.jsonObject(with: data) } catch { directError = error }
-
-        // 2. Input has real " delimiters but literal \n sequences for structural whitespace.
-        //    Context-aware scan: replace \n OUTSIDE string values with actual newlines;
-        //    leave \n INSIDE strings untouched (they're already valid JSON escapes).
-        let structurallyFixed = expandLiteralEscapesOutsideStrings(trimmed)
-        if let sfData = structurallyFixed.data(using: .utf8),
-           let obj = try? JSONSerialization.jsonObject(with: sfData) {
-            parsedJson = deepParseNestedJsonStrings(obj)
-            return
+        // Strategy 2: fix bare control chars inside string values
+        //   Handles real " delimiters + embedded LF/CR in string values.
+        if let obj = jsonParse(reEscapeControlCharsInStringValues(trimmed)) {
+            parsedJson = deepParseNestedJsonStrings(obj); return
         }
 
-        // 3. Fully-escaped payload (all " → \", newlines → \n, etc.)
-        //    Wrap in quotes → decode as JSON string → re-escape control chars
-        //    that ended up bare inside JSON string values → parse as JSON.
+        // Strategy 3: expand literal \n OUTSIDE strings → real whitespace
+        //   Handles real " delimiters + literal \n sequences for structural newlines.
+        if let obj = jsonParse(expandLiteralEscapesOutsideStrings(trimmed)) {
+            parsedJson = deepParseNestedJsonStrings(obj); return
+        }
+
+        // Strategy 4: fully-escaped payload (all " → \", newlines → \n)
+        //   Wrap in quotes so JSONSerialization decodes the escape sequences,
+        //   then re-escape any stray control chars left in string values.
         let wrapped = "\"" + trimmed + "\""
         if let wData = wrapped.data(using: .utf8),
-           let unescaped = try? JSONSerialization.jsonObject(with: wData) as? String {
-            let reEscaped = reEscapeControlCharsInStringValues(unescaped)
-            if let inner = reEscaped.data(using: .utf8),
-               let obj = try? JSONSerialization.jsonObject(with: inner) {
-                parsedJson = deepParseNestedJsonStrings(obj)
-                return
-            }
+           let unescaped = try? JSONSerialization.jsonObject(with: wData) as? String,
+           let obj = jsonParse(reEscapeControlCharsInStringValues(unescaped)) {
+            parsedJson = deepParseNestedJsonStrings(obj); return
         }
 
-        error = directError?.localizedDescription ?? "JSON 解析失败"
+        // Strategy 5: manual decode (handle \\ \n \" sequences explicitly)
+        let manually = manualDecodeEscapes(trimmed)
+        if let obj = jsonParse(reEscapeControlCharsInStringValues(manually)) {
+            parsedJson = deepParseNestedJsonStrings(obj); return
+        }
+
+        error = jsonError(trimmed) ?? "JSON 解析失败"
         parsedJson = nil
+    }
+
+    private func jsonParse(_ text: String) -> Any? {
+        guard let data = text.data(using: .utf8) else { return nil }
+        return try? JSONSerialization.jsonObject(with: data)
+    }
+
+    private func jsonError(_ text: String) -> String? {
+        guard let data = text.data(using: .utf8) else { return "输入包含无效字符" }
+        do { _ = try JSONSerialization.jsonObject(with: data); return nil }
+        catch { return error.localizedDescription }
+    }
+
+    /// Decode escape sequences literally: \n → LF, \t → TAB, \\ → \, \" → "
+    /// Used as a last-resort manual decode for fully-escaped payloads.
+    private func manualDecodeEscapes(_ text: String) -> String {
+        var result = ""
+        result.reserveCapacity(text.count)
+        var i = text.startIndex
+        while i < text.endIndex {
+            let ch = text[i]
+            let next = text.index(after: i)
+            if ch == "\\" && next < text.endIndex {
+                switch text[next] {
+                case "n":  result.append("\n")
+                case "r":  result.append("\r")
+                case "t":  result.append("\t")
+                case "\"": result.append("\"")
+                case "\\": result.append("\\")
+                case "/":  result.append("/")
+                default:   result.append(ch); result.append(text[next])
+                }
+                i = text.index(after: next)
+            } else {
+                result.append(ch)
+                i = next
+            }
+        }
+        return result
     }
 
     /// Context-aware pass over an input that uses real `"` as string delimiters but
