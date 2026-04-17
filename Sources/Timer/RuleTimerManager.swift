@@ -140,6 +140,11 @@ class RuleTimerManager {
     private func fire(rule: ReminderRule) {
         saveLastFire(for: rule)
         DispatchQueue.main.async {
+            if rule.actionKind == .script {
+                ScheduledScriptExecutor.run(rule: rule)
+                return
+            }
+
             let followup: (() -> Void)? = rule.followupMinutes > 0 ? {
                 let delay = TimeInterval(rule.followupMinutes * 60)
                 let t = Timer(timeInterval: delay, repeats: false) { _ in

@@ -1,5 +1,13 @@
 import Foundation
 
+// MARK: - Action Kind (desktop overlay vs shell script)
+
+/// What happens when the rule fires: full-screen reminder or `/bin/sh -c` script.
+enum RuleActionKind: String, Codable {
+    case desktop = "desktop"
+    case script = "script"
+}
+
 // MARK: - Trigger Mode
 
 enum TriggerMode: String, Codable {
@@ -31,6 +39,8 @@ struct ScheduledTime: Codable, Identifiable, Equatable {
 struct ReminderRule: Codable, Identifiable, Equatable {
     var id: UUID
     var name: String
+    /// Desktop = overlay; script = run `shellCommand` on the same schedule.
+    var actionKind: RuleActionKind
     var triggerMode: TriggerMode
     var intervalMinutes: Int
     var scheduledTimes: [ScheduledTime]
@@ -43,19 +53,25 @@ struct ReminderRule: Codable, Identifiable, Equatable {
     var reminderText: String
     var themeId: String
     var isEnabled: Bool
+    /// Shell command for `.script` action (`/bin/sh -c`). Ignored for desktop.
+    var shellCommand: String
+    /// Directory for per-rule log files (`magicer-{uuid}.log`). Empty = no file logging.
+    var logDirectoryPath: String
 
     // Custom CodingKeys and decoder to maintain backward compatibility.
-    // New fields (onceDate, followupMinutes) fall back to defaults when absent in stored data.
+    // New fields fall back to defaults when absent in stored data.
     private enum CodingKeys: String, CodingKey {
-        case id, name, triggerMode, intervalMinutes, scheduledTimes
+        case id, name, actionKind, triggerMode, intervalMinutes, scheduledTimes
         case onceDate, followupMinutes
         case durationSeconds, canCloseImmediately, reminderText, themeId, isEnabled
+        case shellCommand, logDirectoryPath
     }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id               = try c.decode(UUID.self,            forKey: .id)
         name             = try c.decode(String.self,          forKey: .name)
+        actionKind       = (try? c.decode(RuleActionKind.self, forKey: .actionKind)) ?? .desktop
         triggerMode      = (try? c.decode(TriggerMode.self,   forKey: .triggerMode)) ?? .interval
         intervalMinutes  = try c.decode(Int.self,             forKey: .intervalMinutes)
         scheduledTimes   = try c.decode([ScheduledTime].self, forKey: .scheduledTimes)
@@ -66,11 +82,14 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         reminderText     = try c.decode(String.self,          forKey: .reminderText)
         themeId          = try c.decode(String.self,          forKey: .themeId)
         isEnabled        = try c.decode(Bool.self,            forKey: .isEnabled)
+        shellCommand     = (try? c.decode(String.self,        forKey: .shellCommand)) ?? ""
+        logDirectoryPath = (try? c.decode(String.self,        forKey: .logDirectoryPath)) ?? ""
     }
 
     init(
         id: UUID = UUID(),
         name: String = "提醒",
+        actionKind: RuleActionKind = .desktop,
         triggerMode: TriggerMode = .interval,
         intervalMinutes: Int = 60,
         scheduledTimes: [ScheduledTime] = [],
@@ -80,10 +99,13 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         canCloseImmediately: Bool = false,
         reminderText: String = "该休息了，离开屏幕活动一下。",
         themeId: String = "red-alarm",
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        shellCommand: String = "",
+        logDirectoryPath: String = ""
     ) {
         self.id = id
         self.name = name
+        self.actionKind = actionKind
         self.triggerMode = triggerMode
         self.intervalMinutes = intervalMinutes
         self.scheduledTimes = scheduledTimes
@@ -94,5 +116,64 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         self.reminderText = reminderText
         self.themeId = themeId
         self.isEnabled = isEnabled
+        self.shellCommand = shellCommand
+        self.logDirectoryPath = logDirectoryPath
+    }
+}
+
+// MARK: - Schedule conflict helpers (used by rule editor + status)
+
+extension ReminderRule {
+    /// Names of other enabled rules that may fire at the same wall-clock time (best-effort).
+    func timeConflictNames(with allRules: [ReminderRule]) -> [String] {
+        let others = allRules.filter { $0.id != id && $0.isEnabled }
+        var names: [String] = []
+
+        switch triggerMode {
+        case .interval:
+            break
+
+        case .scheduled:
+            guard !scheduledTimes.isEmpty else { break }
+            for other in others {
+                let otherTimes: [(Int, Int)]
+                switch other.triggerMode {
+                case .scheduled:
+                    otherTimes = other.scheduledTimes.map { ($0.hour, $0.minute) }
+                case .once:
+                    let cal = Calendar.current
+                    let h = cal.component(.hour, from: other.onceDate)
+                    let m = cal.component(.minute, from: other.onceDate)
+                    otherTimes = [(h, m)]
+                case .interval:
+                    otherTimes = []
+                }
+                let conflict = scheduledTimes.contains { t in
+                    otherTimes.contains { $0.0 == t.hour && $0.1 == t.minute }
+                }
+                if conflict { names.append(other.name) }
+            }
+
+        case .once:
+            for other in others {
+                switch other.triggerMode {
+                case .once:
+                    if abs(other.onceDate.timeIntervalSince(onceDate)) < 60 {
+                        names.append(other.name)
+                    }
+                case .scheduled:
+                    let cal = Calendar.current
+                    let rh = cal.component(.hour, from: onceDate)
+                    let rm = cal.component(.minute, from: onceDate)
+                    if other.scheduledTimes.contains(where: { $0.hour == rh && $0.minute == rm }) {
+                        names.append(other.name)
+                    }
+                case .interval:
+                    break
+                }
+            }
+        }
+
+        return Array(Set(names)).sorted()
     }
 }

@@ -174,6 +174,12 @@ private struct RuleCard: View {
             formatter.timeStyle = .short
             modePart = "一次 \(formatter.string(from: rule.onceDate))"
         }
+
+        if rule.actionKind == .script {
+            let logHint = rule.logDirectoryPath.isEmpty ? "无文件日志" : "写日志"
+            return [modePart, "Shell", logHint].joined(separator: " · ")
+        }
+
         let parts: [String] = [
             modePart,
             theme.name,
@@ -183,13 +189,14 @@ private struct RuleCard: View {
     }
 
     private func formatRemaining(_ seconds: TimeInterval) -> String {
+        let prefix = rule.actionKind == .script ? "距执行" : "距提醒"
         let s = Int(seconds)
         if s >= 3600 {
-            return "距提醒 \(s / 3600) 时 \((s % 3600) / 60) 分"
+            return "\(prefix) \(s / 3600) 时 \((s % 3600) / 60) 分"
         } else if s >= 60 {
-            return "距提醒 \(s / 60) 分 \(s % 60) 秒"
+            return "\(prefix) \(s / 60) 分 \(s % 60) 秒"
         } else {
-            return "距提醒 \(s) 秒"
+            return "\(prefix) \(s) 秒"
         }
     }
 }

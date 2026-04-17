@@ -104,6 +104,7 @@ struct ReminderSkillExporter {
                 let status = r.isEnabled ? "✅" : "⏸"
                 s += "\n### \(status) \(r.name)\n"
                 s += "- id: `\(r.id)`\n"
+                s += "- action: **\(r.actionKind == .script ? "script (shell)" : "desktop overlay")**\n"
                 switch r.triggerMode {
                 case .interval:
                     s += "- trigger: every **\(r.intervalMinutes) minutes**\n"
@@ -113,11 +114,19 @@ struct ReminderSkillExporter {
                 case .once:
                     s += "- trigger: once @ **\(iso.string(from: r.onceDate))**\n"
                 }
-                if r.followupMinutes > 0 {
-                    s += "- followup: \(r.followupMinutes) min after dismissal\n"
+                if r.actionKind == .desktop {
+                    if r.followupMinutes > 0 {
+                        s += "- followup: \(r.followupMinutes) min after dismissal\n"
+                    }
+                    s += "- overlay text: \"\(r.reminderText)\"\n"
+                    s += "- duration: \(r.durationSeconds)s · theme: \(r.themeId)\n"
+                } else {
+                    let cmd = r.shellCommand.trimmingCharacters(in: .whitespacesAndNewlines)
+                    s += "- shell: `\(cmd.isEmpty ? "(empty)" : cmd.replacingOccurrences(of: "`", with: "'"))`\n"
+                    if !r.logDirectoryPath.isEmpty {
+                        s += "- log dir: `\(r.logDirectoryPath)`\n"
+                    }
                 }
-                s += "- overlay text: \"\(r.reminderText)\"\n"
-                s += "- duration: \(r.durationSeconds)s · theme: \(r.themeId)\n"
             }
         }
 
@@ -142,6 +151,7 @@ struct ReminderSkillExporter {
           -d '{
             "id": "<generate a UUID>",
             "name": "喝水提醒",
+            "actionKind": "desktop",
             "triggerMode": "interval",
             "intervalMinutes": 60,
             "scheduledTimes": [],
@@ -151,7 +161,9 @@ struct ReminderSkillExporter {
             "canCloseImmediately": false,
             "reminderText": "该喝水了！",
             "themeId": "blue-calm",
-            "isEnabled": true
+            "isEnabled": true,
+            "shellCommand": "",
+            "logDirectoryPath": ""
           }'
         ```
 
@@ -171,6 +183,12 @@ struct ReminderSkillExporter {
         | `interval` | repeat every N minutes |
         | `scheduled` | fire at specific times each day (use `scheduledTimes`) |
         | `once` | fire once at `onceDate`, then auto-disable |
+
+        ### actionKind values
+        | value | meaning |
+        | --- | --- |
+        | `desktop` | full-screen overlay reminder |
+        | `script` | run `shellCommand` via `/bin/sh -c`; optional `logDirectoryPath` for file logs |
 
         ### Available themeIds
         `red-alarm` · `blue-calm` · `green-focus` · `purple-zen` · `orange-energy`
@@ -198,7 +216,8 @@ struct ReminderSkillExporter {
         } else {
             for r in rules {
                 let status = r.isEnabled ? "✅" : "⏸"
-                s += "- \(status) **\(r.name)** (`\(r.id)`)"
+                let kind = r.actionKind == .script ? "脚本" : "桌面"
+                s += "- \(status) **\(r.name)** (`\(r.id)`) · \(kind)"
                 switch r.triggerMode {
                 case .interval:  s += " — 每 \(r.intervalMinutes) 分钟"
                 case .scheduled:
@@ -223,6 +242,7 @@ struct ReminderSkillExporter {
         s += "curl -X DELETE http://127.0.0.1:18879/reminders/{id}\n"
         s += "```\n\n"
         s += "> triggerMode: `interval`(循环) / `scheduled`(定点) / `once`(一次)\n"
+        s += "> actionKind: `desktop`(桌面蒙层) / `script`(定时 Shell，`shellCommand` + 可选 `logDirectoryPath`)\n"
         s += "> themeId: `red-alarm` · `blue-calm` · `green-focus` · `purple-zen` · `orange-energy` · `mono-minimal` · `green-fresh`\n\n"
         s += "_Auto-synced by Magicer · \(iso.string(from: Date()))_\n"
         return s

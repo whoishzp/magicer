@@ -226,7 +226,7 @@ private struct RuleRowView: View {
                 .frame(width: 4, height: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(rule.name).font(.body).foregroundColor(rule.isEnabled ? .primary : .secondary)
-                Text("每 \(rule.intervalMinutes) 分钟 · \(ThemeColors.find(rule.themeId).name)")
+                Text(ruleRowSubtitle)
                     .font(.caption2).foregroundColor(.secondary)
             }
             Spacer()
@@ -235,5 +235,27 @@ private struct RuleRowView: View {
             }
         }
         .padding(.vertical, 2)
+    }
+
+    private var ruleRowSubtitle: String {
+        if rule.actionKind == .script {
+            return "定时脚本 · \(triggerSummary)"
+        }
+        return "\(triggerSummary) · \(ThemeColors.find(rule.themeId).name)"
+    }
+
+    private var triggerSummary: String {
+        switch rule.triggerMode {
+        case .interval:
+            return "每 \(rule.intervalMinutes) 分钟"
+        case .scheduled:
+            let times = rule.scheduledTimes.map { $0.displayText }.joined(separator: "、")
+            return times.isEmpty ? "定点（未设时刻）" : "定点 \(times)"
+        case .once:
+            let f = DateFormatter()
+            f.dateStyle = .short
+            f.timeStyle = .short
+            return "一次 \(f.string(from: rule.onceDate))"
+        }
     }
 }
