@@ -122,7 +122,8 @@ class OverlayManager {
 
         let root = OverlayRootView(frame: NSRect(origin: .zero, size: fr.size))
         root.wantsLayer = true
-        root.layer?.backgroundColor = theme.background.cgColor
+        root.theme = theme
+        root.layer?.backgroundColor = theme.background.cgColor  // fallback behind draw()
         root.autoresizingMask = [.width, .height]
         buildContent(in: root, rule: rule, theme: theme, size: fr.size)
 
@@ -168,7 +169,7 @@ class OverlayManager {
 
     static func startClock() {
         let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        fmt.dateFormat = "HH:mm:ss"
         let initial = fmt.string(from: Date())
         clockLabels.forEach { $0.stringValue = initial }
 

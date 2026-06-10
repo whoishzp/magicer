@@ -2,7 +2,7 @@
 
 > 工作中断提醒 + 开发者工具箱 — macOS App
 
-[![Version](https://img.shields.io/badge/version-1.81.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.82.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -304,6 +304,14 @@ git tag v1.48.0 && git push origin v1.48.0
 - 全屏覆盖进一步加固：去掉 `.transient`（该 flag 会在 Mission Control 切换时隐藏窗口），窗口层级提升至 `screenSaver + 200`
 - 新增 MCP 服务：Magicer 内嵌 HTTP server（127.0.0.1:18879），AI Agent 可通过 `cursor/magicer_mcp.py` 读写提醒规则
 - 提醒规则编辑页新增**时间冲突检测**：定点/一次提醒时间与其他规则冲突时展示橙色内联警告
+
+### v1.82.0（2026-06-10）
+
+- **渐变 + 光晕球背景**：所有 8 个主题弹窗背景改为对角线渐变叠加彩色柔光球，参考 macOS 壁纸风格，左上大球 / 右下中球 / 右上小球三层叠加
+- **统一单一排版模板**：彻底移除各主题差异化布局，全部统一为居中层次结构（规则名 → 时间 → 日期 → 分隔线 → 提醒文字），简洁不杂乱
+- **时间拆分两行展示**：`HH:mm:ss`（大字，每秒跳动）+ `yyyy-MM-dd`（小字，静态）
+- 深色主题白色文字，浅色主题主题色文字，各主题差异化通过渐变色调体现
+- 新增 8 组 `orbColor1 / orbColor2` 高饱和度光晕颜色定义
 
 ### v1.81.0（2026-06-10）
 
