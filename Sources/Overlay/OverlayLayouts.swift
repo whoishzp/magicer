@@ -49,268 +49,343 @@ extension OverlayManager {
         let b = NSBox(); b.boxType = .separator; b.translatesAutoresizingMaskIntoConstraints = false; return b
     }
 
-    static func addCloseButton(_ btn: CloseButtonView, below anchor: NSLayoutYAxisAnchor,
-                                offset: CGFloat, root: NSView) {
+    /// Creates a clock label pre-filled with the current time and registered for per-second updates.
+    static func clockLbl(size: CGFloat, weight: NSFont.Weight, color: NSColor,
+                         align: NSTextAlignment = .center) -> NSTextField {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let f = NSTextField(labelWithString: fmt.string(from: Date()))
+        f.font = .monospacedSystemFont(ofSize: size, weight: weight)
+        f.textColor = color
+        f.alignment = align
+        f.drawsBackground = false
+        f.backgroundColor = .clear
+        f.translatesAutoresizingMaskIntoConstraints = false
+        clockLabels.append(f)
+        return f
+    }
+
+    /// Returns the effective close button label: custom text if set, otherwise "OK".
+    static func buttonText(_ rule: ReminderRule) -> String {
+        let t = rule.closeButtonText.trimmingCharacters(in: .whitespaces)
+        return t.isEmpty ? "OK" : t
+    }
+
+    // MARK: - Bottom-right placement (shared by all themes)
+
+    static func addCloseButton(_ btn: CloseButtonView, root: NSView) {
         btn.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(btn)
         NSLayoutConstraint.activate([
-            btn.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            btn.topAnchor.constraint(equalTo: anchor, constant: offset),
-            btn.widthAnchor.constraint(equalToConstant: 340),
-            btn.heightAnchor.constraint(equalToConstant: 64),
+            btn.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -44),
+            btn.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -48),
         ])
         closeBtns.append(btn)
     }
 
-    static func addCountdown(_ cd: NSTextField, below anchor: NSLayoutYAxisAnchor,
-                             offset: CGFloat, root: NSView) {
+    static func addCountdown(_ cd: NSTextField, root: NSView) {
+        cd.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(cd)
         NSLayoutConstraint.activate([
-            cd.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            cd.topAnchor.constraint(equalTo: anchor, constant: offset),
+            cd.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -44),
+            cd.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -100),
         ])
         countdownLabels.append(cd)
     }
 
     // MARK: - 1. Dramatic (深红警告)
+    // Large clock is the focal point; title above, body below.
 
     static func buildDramatic(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
-        let topOffset = size.height * 0.20
-        let title = lbl("⚠  \(rule.name)", size: 62, weight: .black, color: theme.titleTextColor)
-        let sep = makeSeparator()
-        let body = lbl(rule.reminderText, size: 28, weight: .medium, color: theme.bodyTextColor, wrap: true)
-        let cd = lbl("", size: 20, weight: .regular, color: theme.countdownColor)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let topOffset = size.height * 0.18
+        let title = lbl("⚠  \(rule.name)", size: 38, weight: .black, color: theme.titleTextColor)
+        let sep   = makeSeparator()
+        let clock = clockLbl(size: 66, weight: .bold, color: theme.primary)
+        let body  = lbl(rule.reminderText, size: 22, weight: .medium, color: theme.bodyTextColor, wrap: true)
+        let cd    = lbl("", size: 13, weight: .regular, color: theme.countdownColor)
+        let btn   = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
-        [title, sep, body, cd].forEach { root.addSubview($0) }
+        [title, sep, clock, body].forEach { root.addSubview($0) }
         NSLayoutConstraint.activate([
             title.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             title.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
             sep.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            sep.widthAnchor.constraint(equalToConstant: 600),
-            sep.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 28),
+            sep.widthAnchor.constraint(equalToConstant: 700),
+            sep.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 22),
+            clock.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            clock.topAnchor.constraint(equalTo: sep.bottomAnchor, constant: 36),
             body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 700),
-            body.topAnchor.constraint(equalTo: sep.bottomAnchor, constant: 40),
+            body.topAnchor.constraint(equalTo: clock.bottomAnchor, constant: 36),
         ])
-        addCountdown(cd, below: body.bottomAnchor, offset: 56, root: root)
-        addCloseButton(btn, below: body.bottomAnchor, offset: 48, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 2. Serene (深蓝平静)
+    // Rule name small at top, then huge clock, body below.
 
     static func buildSerene(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
-        let topOffset = size.height * 0.24
-        let circle = lbl("◉", size: 110, weight: .ultraLight, color: theme.primary.withAlphaComponent(0.8))
-        let sub = lbl(rule.name, size: 22, weight: .light, color: theme.primary.withAlphaComponent(0.9))
-        let body = lbl(rule.reminderText, size: 24, weight: .regular, color: theme.bodyTextColor, wrap: true)
-        let cd = lbl("", size: 18, weight: .light, color: theme.countdownColor)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let topOffset = size.height * 0.22
+        let nameTag = lbl(rule.name, size: 18, weight: .light, color: theme.primary.withAlphaComponent(0.65))
+        let clock   = clockLbl(size: 68, weight: .ultraLight, color: theme.primary)
+        let body    = lbl(rule.reminderText, size: 22, weight: .regular, color: theme.bodyTextColor, wrap: true)
+        let cd      = lbl("", size: 13, weight: .light, color: theme.countdownColor)
+        let btn     = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
-        [circle, sub, body, cd].forEach { root.addSubview($0) }
+        [nameTag, clock, body].forEach { root.addSubview($0) }
         NSLayoutConstraint.activate([
-            circle.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            circle.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
-            sub.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            sub.topAnchor.constraint(equalTo: circle.bottomAnchor, constant: 6),
+            nameTag.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            nameTag.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
+            clock.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            clock.topAnchor.constraint(equalTo: nameTag.bottomAnchor, constant: 18),
             body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 560),
-            body.topAnchor.constraint(equalTo: sub.bottomAnchor, constant: 36),
+            body.topAnchor.constraint(equalTo: clock.bottomAnchor, constant: 40),
         ])
-        addCountdown(cd, below: body.bottomAnchor, offset: 48, root: root)
-        addCloseButton(btn, below: body.bottomAnchor, offset: 40, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 3. Nature (深绿清新)
+    // Left-aligned: leaf → rule name → clock (prominent mono) → body.
 
     static func buildNature(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
         let leftMargin: CGFloat = size.width * 0.15
-        let topOffset = size.height * 0.22
+        let topOffset = size.height * 0.20
         let bar = NSView(); bar.wantsLayer = true
-        bar.layer?.backgroundColor = theme.primary.withAlphaComponent(0.7).cgColor
+        bar.layer?.backgroundColor = theme.primary.withAlphaComponent(0.60).cgColor
         bar.layer?.cornerRadius = 3
         bar.translatesAutoresizingMaskIntoConstraints = false
-        let leaf = lbl("🌿", size: 80, weight: .regular, color: theme.primary)
-        leaf.alignment = .left
-        let title = lblLeft(rule.name, size: 44, weight: .bold, color: theme.titleTextColor)
-        let body = lblLeft(rule.reminderText, size: 24, weight: .regular, color: theme.bodyTextColor, wrap: true)
-        let cd = lbl("", size: 18, weight: .regular, color: theme.countdownColor)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let leaf  = lblLeft("🌿", size: 52, weight: .regular, color: theme.primary)
+        let title = lblLeft(rule.name, size: 30, weight: .bold, color: theme.titleTextColor)
+        let clock = clockLbl(size: 46, weight: .bold, color: theme.primary, align: .left)
+        let body  = lblLeft(rule.reminderText, size: 20, weight: .regular, color: theme.bodyTextColor, wrap: true)
+        let cd    = lbl("", size: 13, weight: .regular, color: theme.countdownColor)
+        let btn   = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
-        [bar, leaf, title, body, cd].forEach { root.addSubview($0) }
+        [bar, leaf, title, clock, body].forEach { root.addSubview($0) }
         NSLayoutConstraint.activate([
-            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin - 24),
+            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin - 22),
             bar.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
-            bar.widthAnchor.constraint(equalToConstant: 6),
-            bar.heightAnchor.constraint(equalToConstant: 220),
+            bar.widthAnchor.constraint(equalToConstant: 5),
+            bar.heightAnchor.constraint(equalToConstant: 270),
             leaf.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
             leaf.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
             title.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            title.topAnchor.constraint(equalTo: leaf.bottomAnchor, constant: 10),
+            title.topAnchor.constraint(equalTo: leaf.bottomAnchor, constant: 8),
+            clock.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            clock.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 10),
             body.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 600),
-            body.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 24),
+            body.topAnchor.constraint(equalTo: clock.bottomAnchor, constant: 24),
         ])
-        addCountdown(cd, below: body.bottomAnchor, offset: 52, root: root)
-        addCloseButton(btn, below: body.bottomAnchor, offset: 44, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 4. Terminal (黑白极简)
+    // Terminal log style: header, RULE line, large clock line, NOTICE line, footer.
 
     static func buildTerminal(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
-        let leftMargin: CGFloat = size.width * 0.25
-        let topOffset = size.height * 0.26
-        let prompt = lblLeft("> \(rule.name) —", size: 18, weight: .regular,
-                             color: theme.primary.withAlphaComponent(0.55), mono: true)
-        let dashLine = lblLeft("─────────────────────────────────────────────────",
-                               size: 13, weight: .regular, color: theme.primary.withAlphaComponent(0.25), mono: true)
-        let bodyPre = lblLeft("  \(rule.reminderText)", size: 26, weight: .medium,
-                              color: theme.bodyTextColor, wrap: true, mono: true)
-        let cd = lblLeft("", size: 16, weight: .regular, color: theme.countdownColor, mono: true)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let leftMargin: CGFloat = size.width * 0.22
+        let topOffset = size.height * 0.22
+        let header  = lblLeft("> ALERT ─────────────────────────────────────────",
+                              size: 15, weight: .regular, color: theme.primary.withAlphaComponent(0.50), mono: true)
+        let ruleLine = lblLeft("  RULE   : \(rule.name)",
+                               size: 16, weight: .regular, color: theme.bodyTextColor, mono: true)
+        let timePfx = lblLeft("  TIME   : ", size: 28, weight: .medium,
+                              color: theme.bodyTextColor.withAlphaComponent(0.55), mono: true)
+        let clock   = clockLbl(size: 28, weight: .bold, color: theme.primary, align: .left)
+        let notice  = lblLeft("  NOTICE : \(rule.reminderText)",
+                              size: 16, weight: .regular, color: theme.bodyTextColor, wrap: true, mono: true)
+        let footer  = lblLeft("─────────────────────────────────────────────────",
+                              size: 12, weight: .regular, color: theme.primary.withAlphaComponent(0.25), mono: true)
+        let cd      = lbl("", size: 13, weight: .regular, color: theme.countdownColor, mono: true)
+        let btn     = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
-        [prompt, dashLine, bodyPre, cd].forEach { root.addSubview($0) }
+        // Horizontal stack for "TIME   : <clock>"
+        let timeRow = NSStackView(views: [timePfx, clock])
+        timeRow.orientation = .horizontal
+        timeRow.spacing = 0
+        timeRow.alignment = .centerY
+        timeRow.translatesAutoresizingMaskIntoConstraints = false
+
+        [header, ruleLine, timeRow, notice, footer].forEach { root.addSubview($0) }
         NSLayoutConstraint.activate([
-            prompt.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            prompt.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
-            dashLine.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            dashLine.topAnchor.constraint(equalTo: prompt.bottomAnchor, constant: 10),
-            bodyPre.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            bodyPre.widthAnchor.constraint(lessThanOrEqualToConstant: 620),
-            bodyPre.topAnchor.constraint(equalTo: dashLine.bottomAnchor, constant: 20),
+            header.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            header.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
+            ruleLine.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            ruleLine.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 14),
+            timeRow.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            timeRow.topAnchor.constraint(equalTo: ruleLine.bottomAnchor, constant: 10),
+            notice.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            notice.widthAnchor.constraint(lessThanOrEqualToConstant: 660),
+            notice.topAnchor.constraint(equalTo: timeRow.bottomAnchor, constant: 10),
+            footer.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            footer.topAnchor.constraint(equalTo: notice.bottomAnchor, constant: 18),
         ])
-        addCountdown(cd, below: bodyPre.bottomAnchor, offset: 36, root: root)
-        addCloseButton(btn, below: bodyPre.bottomAnchor, offset: 28, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 5. Gentle (温柔杏)
+    // Flower decoration → title → rounded card with clock → body below.
 
     static func buildGentle(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
-        let topOffset = size.height * 0.18
-        let flowers = lbl("🌸  🌸  🌸  🌸  🌸", size: 36, weight: .regular, color: .clear)
-        let title = lbl(rule.name, size: 38, weight: .semibold, color: theme.titleTextColor)
-        let container = NSView(); container.wantsLayer = true
-        container.layer?.backgroundColor = theme.primary.withAlphaComponent(0.08).cgColor
-        container.layer?.cornerRadius = 20
-        container.layer?.borderWidth = 1.5
-        container.layer?.borderColor = theme.primary.withAlphaComponent(0.2).cgColor
-        container.translatesAutoresizingMaskIntoConstraints = false
-        let body = lbl(rule.reminderText, size: 26, weight: .medium, color: theme.bodyTextColor, wrap: true)
-        let cd = lbl("", size: 18, weight: .light, color: theme.countdownColor)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let topOffset = size.height * 0.17
+        let flowers = lbl("🌸  🌸  🌸  🌸  🌸", size: 32, weight: .regular, color: .clear)
+        let title   = lbl(rule.name, size: 34, weight: .semibold, color: theme.titleTextColor)
 
-        [flowers, title, container, cd].forEach { root.addSubview($0) }
-        root.addSubview(body)
+        // Rounded clock card
+        let card = NSView(); card.wantsLayer = true
+        card.layer?.backgroundColor = theme.primary.withAlphaComponent(0.08).cgColor
+        card.layer?.cornerRadius = 18
+        card.layer?.borderWidth = 1.5
+        card.layer?.borderColor = theme.primary.withAlphaComponent(0.22).cgColor
+        card.translatesAutoresizingMaskIntoConstraints = false
+
+        let clock = clockLbl(size: 44, weight: .medium, color: theme.titleTextColor)
+        let body  = lbl(rule.reminderText, size: 22, weight: .medium, color: theme.bodyTextColor, wrap: true)
+        let cd    = lbl("", size: 13, weight: .light, color: theme.countdownColor)
+        let btn   = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
+
+        [flowers, title, card, body].forEach { root.addSubview($0) }
+        card.addSubview(clock)
         NSLayoutConstraint.activate([
             flowers.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             flowers.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
             title.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            title.topAnchor.constraint(equalTo: flowers.bottomAnchor, constant: 20),
-            container.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            container.widthAnchor.constraint(equalToConstant: 600),
-            container.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 28),
-            body.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            body.widthAnchor.constraint(lessThanOrEqualToConstant: 540),
-            body.topAnchor.constraint(equalTo: container.topAnchor, constant: 28),
-            body.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -28),
+            title.topAnchor.constraint(equalTo: flowers.bottomAnchor, constant: 18),
+            card.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            card.widthAnchor.constraint(equalToConstant: 620),
+            card.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 24),
+            clock.centerXAnchor.constraint(equalTo: card.centerXAnchor),
+            clock.topAnchor.constraint(equalTo: card.topAnchor, constant: 22),
+            clock.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -22),
+            body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            body.widthAnchor.constraint(lessThanOrEqualToConstant: 560),
+            body.topAnchor.constraint(equalTo: card.bottomAnchor, constant: 28),
         ])
-        addCountdown(cd, below: container.bottomAnchor, offset: 32, root: root)
-        addCloseButton(btn, below: container.bottomAnchor, offset: 24, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 6. Playful (少女粉)
+    // Decorations → title → large clock → body → hearts.
 
     static func buildPlayful(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
-        let topOffset = size.height * 0.20
-        let decoTop = lbl("✨  💕  ✨", size: 44, weight: .regular, color: .clear)
-        let title = lbl("✨ \(rule.name) ✨", size: 52, weight: .bold, color: theme.titleTextColor)
-        let body = lbl(rule.reminderText, size: 26, weight: .medium, color: theme.bodyTextColor, wrap: true)
-        let decoMid = lbl("♡  ♡  ♡  ♡  ♡  ♡", size: 24, weight: .regular, color: theme.primary.withAlphaComponent(0.4))
-        let cd = lbl("", size: 18, weight: .regular, color: theme.countdownColor)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let topOffset = size.height * 0.19
+        let decoTop = lbl("✨  💕  ✨", size: 38, weight: .regular, color: .clear)
+        let title   = lbl("✨ \(rule.name) ✨", size: 44, weight: .bold, color: theme.titleTextColor)
+        let clock   = clockLbl(size: 58, weight: .bold, color: theme.primary)
+        let body    = lbl(rule.reminderText, size: 22, weight: .medium, color: theme.bodyTextColor, wrap: true)
+        let decoMid = lbl("♡  ♡  ♡  ♡  ♡  ♡", size: 22, weight: .regular,
+                          color: theme.primary.withAlphaComponent(0.38))
+        let cd      = lbl("", size: 13, weight: .regular, color: theme.countdownColor)
+        let btn     = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
-        [decoTop, title, body, decoMid, cd].forEach { root.addSubview($0) }
+        [decoTop, title, clock, body, decoMid].forEach { root.addSubview($0) }
         NSLayoutConstraint.activate([
             decoTop.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             decoTop.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
             title.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            title.topAnchor.constraint(equalTo: decoTop.bottomAnchor, constant: 8),
+            title.topAnchor.constraint(equalTo: decoTop.bottomAnchor, constant: 6),
+            clock.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            clock.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 28),
             body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 620),
-            body.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 36),
+            body.topAnchor.constraint(equalTo: clock.bottomAnchor, constant: 30),
             decoMid.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            decoMid.topAnchor.constraint(equalTo: body.bottomAnchor, constant: 24),
+            decoMid.topAnchor.constraint(equalTo: body.bottomAnchor, constant: 22),
         ])
-        addCountdown(cd, below: decoMid.bottomAnchor, offset: 32, root: root)
-        addCloseButton(btn, below: decoMid.bottomAnchor, offset: 24, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 7. Colorful (马卡龙)
+    // Color block contains clock + title; body below.
 
     static func buildColorful(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
         let leftMargin: CGFloat = size.width * 0.18
-        let topOffset = size.height * 0.21
-        let block = NSView(); block.wantsLayer = true
-        block.layer?.backgroundColor = theme.primary.withAlphaComponent(0.15).cgColor
-        block.layer?.cornerRadius = 12
-        block.translatesAutoresizingMaskIntoConstraints = false
-        let emoji = lblLeft("🍭", size: 64, weight: .regular, color: .clear)
-        let title = lblLeft(rule.name, size: 52, weight: .heavy, color: theme.titleTextColor)
-        let accent = lblLeft("— BREAK TIME —", size: 16, weight: .semibold,
-                             color: theme.primary.withAlphaComponent(0.6))
-        let body = lbl(rule.reminderText, size: 26, weight: .medium, color: theme.bodyTextColor, wrap: true)
-        let cd = lbl("", size: 18, weight: .regular, color: theme.countdownColor)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+        let topOffset = size.height * 0.19
 
-        [block, emoji, title, accent, body, cd].forEach { root.addSubview($0) }
+        let block = NSView(); block.wantsLayer = true
+        block.layer?.backgroundColor = theme.primary.withAlphaComponent(0.14).cgColor
+        block.layer?.cornerRadius = 14
+        block.translatesAutoresizingMaskIntoConstraints = false
+
+        let clockInBlock = clockLbl(size: 50, weight: .heavy, color: theme.titleTextColor, align: .left)
+        let titleInBlock = lblLeft(rule.name, size: 20, weight: .semibold,
+                                   color: theme.primary.withAlphaComponent(0.70))
+        let accent = lblLeft("— BREAK TIME —", size: 13, weight: .semibold,
+                             color: theme.primary.withAlphaComponent(0.50))
+        let body  = lbl(rule.reminderText, size: 22, weight: .medium, color: theme.bodyTextColor, wrap: true)
+        let cd    = lbl("", size: 13, weight: .regular, color: theme.countdownColor)
+        let btn   = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
+
+        [block, body].forEach { root.addSubview($0) }
+        [clockInBlock, titleInBlock, accent].forEach { block.addSubview($0) }
         NSLayoutConstraint.activate([
-            block.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin - 16),
-            block.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset - 12),
-            block.widthAnchor.constraint(equalToConstant: 520),
-            block.heightAnchor.constraint(equalToConstant: 180),
-            emoji.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            emoji.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
-            title.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            title.topAnchor.constraint(equalTo: emoji.bottomAnchor, constant: 4),
-            accent.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            accent.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 10),
+            block.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            block.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
+            block.widthAnchor.constraint(equalToConstant: 580),
+            clockInBlock.leadingAnchor.constraint(equalTo: block.leadingAnchor, constant: 24),
+            clockInBlock.topAnchor.constraint(equalTo: block.topAnchor, constant: 22),
+            titleInBlock.leadingAnchor.constraint(equalTo: block.leadingAnchor, constant: 24),
+            titleInBlock.topAnchor.constraint(equalTo: clockInBlock.bottomAnchor, constant: 6),
+            accent.leadingAnchor.constraint(equalTo: block.leadingAnchor, constant: 24),
+            accent.topAnchor.constraint(equalTo: titleInBlock.bottomAnchor, constant: 6),
+            accent.bottomAnchor.constraint(equalTo: block.bottomAnchor, constant: -22),
             body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 640),
-            body.topAnchor.constraint(equalTo: accent.bottomAnchor, constant: 48),
+            body.topAnchor.constraint(equalTo: block.bottomAnchor, constant: 40),
         ])
-        addCountdown(cd, below: body.bottomAnchor, offset: 48, root: root)
-        addCloseButton(btn, below: body.bottomAnchor, offset: 40, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 
     // MARK: - 8. Technical (冷库冰蓝)
+    // System-log style: SYSTEM header, RULE row, large TIME row (clock), REMINDER row, footer.
 
     static func buildTechnical(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
         let leftMargin: CGFloat = size.width * 0.22
-        let topOffset = size.height * 0.24
-        let header = lblLeft("SYSTEM  ═══════════════════════════════════════",
-                             size: 15, weight: .medium, color: theme.primary.withAlphaComponent(0.7), mono: true)
-        let statusRow = lblLeft("RULE     : \(rule.name)",
-                                size: 16, weight: .regular, color: theme.bodyTextColor, mono: true)
+        let topOffset = size.height * 0.22
+        let header  = lblLeft("SYSTEM  ══════════════════════════════════════════",
+                              size: 14, weight: .medium, color: theme.primary.withAlphaComponent(0.65), mono: true)
+        let ruleRow = lblLeft("RULE     : \(rule.name)",
+                              size: 15, weight: .regular, color: theme.bodyTextColor, mono: true)
+        let timePfx = lblLeft("TIME     : ", size: 26, weight: .medium,
+                              color: theme.bodyTextColor.withAlphaComponent(0.55), mono: true)
+        let clock   = clockLbl(size: 26, weight: .bold, color: theme.primary, align: .left)
         let reminderRow = lblLeft("REMINDER : \(rule.reminderText)",
-                                  size: 16, weight: .regular, color: theme.bodyTextColor, wrap: true, mono: true)
-        let footer = lblLeft("──────────────────────────────────────────────",
-                             size: 13, weight: .regular, color: theme.primary.withAlphaComponent(0.3), mono: true)
-        let cd = lbl("", size: 16, weight: .regular, color: theme.countdownColor, mono: true)
-        let btn = CloseButtonView(theme: theme); btn.isHidden = true
+                                  size: 15, weight: .regular, color: theme.bodyTextColor, wrap: true, mono: true)
+        let footer  = lblLeft("──────────────────────────────────────────────────",
+                              size: 12, weight: .regular, color: theme.primary.withAlphaComponent(0.28), mono: true)
+        let cd      = lbl("", size: 13, weight: .regular, color: theme.countdownColor, mono: true)
+        let btn     = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
-        [header, statusRow, reminderRow, footer, cd].forEach { root.addSubview($0) }
+        let timeRow = NSStackView(views: [timePfx, clock])
+        timeRow.orientation = .horizontal
+        timeRow.spacing = 0
+        timeRow.alignment = .centerY
+        timeRow.translatesAutoresizingMaskIntoConstraints = false
+
+        [header, ruleRow, timeRow, reminderRow, footer].forEach { root.addSubview($0) }
         NSLayoutConstraint.activate([
             header.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
             header.topAnchor.constraint(equalTo: root.topAnchor, constant: topOffset),
-            statusRow.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            statusRow.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 18),
+            ruleRow.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            ruleRow.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 16),
+            timeRow.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
+            timeRow.topAnchor.constraint(equalTo: ruleRow.bottomAnchor, constant: 10),
             reminderRow.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
             reminderRow.widthAnchor.constraint(lessThanOrEqualToConstant: 680),
-            reminderRow.topAnchor.constraint(equalTo: statusRow.bottomAnchor, constant: 10),
+            reminderRow.topAnchor.constraint(equalTo: timeRow.bottomAnchor, constant: 10),
             footer.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: leftMargin),
-            footer.topAnchor.constraint(equalTo: reminderRow.bottomAnchor, constant: 20),
+            footer.topAnchor.constraint(equalTo: reminderRow.bottomAnchor, constant: 18),
         ])
-        addCountdown(cd, below: footer.bottomAnchor, offset: 36, root: root)
-        addCloseButton(btn, below: footer.bottomAnchor, offset: 28, root: root)
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
     }
 }

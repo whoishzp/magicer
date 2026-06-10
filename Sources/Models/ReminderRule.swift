@@ -57,6 +57,8 @@ struct ReminderRule: Codable, Identifiable, Equatable {
     var shellCommand: String
     /// Directory for per-rule log files (`magicer-{uuid}.log`). Empty = no file logging.
     var logDirectoryPath: String
+    /// Custom label for the overlay close button. Empty = "OK".
+    var closeButtonText: String
 
     // Custom CodingKeys and decoder to maintain backward compatibility.
     // New fields fall back to defaults when absent in stored data.
@@ -64,7 +66,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         case id, name, actionKind, triggerMode, intervalMinutes, scheduledTimes
         case onceDate, followupMinutes
         case durationSeconds, canCloseImmediately, reminderText, themeId, isEnabled
-        case shellCommand, logDirectoryPath
+        case shellCommand, logDirectoryPath, closeButtonText
     }
 
     init(from decoder: Decoder) throws {
@@ -84,6 +86,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         isEnabled        = try c.decode(Bool.self,            forKey: .isEnabled)
         shellCommand     = (try? c.decode(String.self,        forKey: .shellCommand)) ?? ""
         logDirectoryPath = (try? c.decode(String.self,        forKey: .logDirectoryPath)) ?? ""
+        closeButtonText  = (try? c.decode(String.self,        forKey: .closeButtonText)) ?? ""
     }
 
     init(
@@ -101,7 +104,8 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         themeId: String = "red-alarm",
         isEnabled: Bool = true,
         shellCommand: String = "",
-        logDirectoryPath: String = ""
+        logDirectoryPath: String = "",
+        closeButtonText: String = ""
     ) {
         self.id = id
         self.name = name
@@ -118,6 +122,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         self.isEnabled = isEnabled
         self.shellCommand = shellCommand
         self.logDirectoryPath = logDirectoryPath
+        self.closeButtonText = closeButtonText
     }
 }
 

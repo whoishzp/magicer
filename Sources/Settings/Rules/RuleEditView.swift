@@ -114,6 +114,13 @@ struct RuleEditView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                 )
+
+            HStack {
+                Text("关闭按钮")
+                    .frame(width: 80, alignment: .leading)
+                TextField("留空则显示 OK", text: $rule.closeButtonText)
+                    .textFieldStyle(.roundedBorder)
+            }
         }
     }
 

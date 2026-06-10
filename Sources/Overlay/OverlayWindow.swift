@@ -20,8 +20,10 @@ class OverlayNSWindow: NSWindow {
 class OverlayManager {
     static var windows: [NSWindow] = []
     static var countdownTimer: Timer?
+    static var clockTimer: Timer?
     static var closeBtns: [CloseButtonView] = []
     static var countdownLabels: [NSTextField] = []
+    static var clockLabels: [NSTextField] = []
 
     private static var keyMonitor: Any?
     private static var enterPressCount = 0
@@ -36,6 +38,7 @@ class OverlayManager {
         OverlayManager.onDismiss = onDismiss
         closeBtns.removeAll()
         countdownLabels.removeAll()
+        clockLabels.removeAll()
         enterPressCount = 0
         lastEnterTime = nil
 
@@ -54,6 +57,7 @@ class OverlayManager {
 
         installKeyMonitor()
         installSpaceObserver()
+        startClock()
 
         let closeDelay = rule.canCloseImmediately ? 0 : rule.durationSeconds
         if closeDelay <= 0 {
@@ -66,6 +70,7 @@ class OverlayManager {
 
     static func dismiss() {
         countdownTimer?.invalidate(); countdownTimer = nil
+        clockTimer?.invalidate(); clockTimer = nil
         if let m = keyMonitor { NSEvent.removeMonitor(m); keyMonitor = nil }
         if let obs = spaceObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(obs)
@@ -75,6 +80,7 @@ class OverlayManager {
         windows.removeAll()
         closeBtns.removeAll()
         countdownLabels.removeAll()
+        clockLabels.removeAll()
         enterPressCount = 0
 
         // Restore Dock icon / normal Space behaviour.
@@ -158,16 +164,33 @@ class OverlayManager {
         }
     }
 
+    // MARK: - Clock
+
+    static func startClock() {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let initial = fmt.string(from: Date())
+        clockLabels.forEach { $0.stringValue = initial }
+
+        clockTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            let s = fmt.string(from: Date())
+            DispatchQueue.main.async {
+                clockLabels.forEach { $0.stringValue = s }
+            }
+        }
+        RunLoop.main.add(clockTimer!, forMode: .common)
+    }
+
     // MARK: - Countdown
 
     static func startCountdown(seconds: Int) {
         var remaining = seconds
-        countdownLabels.forEach { $0.stringValue = "\(remaining) 秒后可关闭…" }
+        countdownLabels.forEach { $0.stringValue = "\(remaining) 秒后可关闭" }
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
             remaining -= 1
             DispatchQueue.main.async {
                 if remaining > 0 {
-                    countdownLabels.forEach { $0.stringValue = "\(remaining) 秒后可关闭…" }
+                    countdownLabels.forEach { $0.stringValue = "\(remaining) 秒后可关闭" }
                 } else {
                     timer.invalidate(); countdownTimer = nil
                     countdownLabels.forEach { $0.stringValue = "" }

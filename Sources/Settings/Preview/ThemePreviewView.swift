@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// Preview window: matches the actual overlay layout for each theme.
 struct ThemePreviewView: View {
     let theme: ThemeColors
     let ruleName: String
     let reminderText: String
     @Environment(\.dismiss) private var dismiss
+
+    @State private var clockString: String = ""
+    private let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var sampleText: String {
         reminderText.isEmpty ? "（这里是你的提醒内容）" : reminderText
@@ -19,10 +21,9 @@ struct ThemePreviewView: View {
         ZStack {
             Color(theme.background).ignoresSafeArea()
 
-            // Layout varies per theme
             layoutContent
 
-            // Close overlay
+            // Top-right dismiss button
             VStack {
                 HStack {
                     Spacer()
@@ -36,6 +37,7 @@ struct ThemePreviewView: View {
                     .padding(14)
                 }
                 Spacer()
+                // Theme badge + close button preview (bottom-right)
                 HStack {
                     HStack(spacing: 6) {
                         Circle().fill(Color(theme.primary)).frame(width: 9, height: 9)
@@ -45,10 +47,25 @@ struct ThemePreviewView: View {
                     }
                     .padding(14)
                     Spacer()
+                    closeButtonPreview
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 14)
                 }
             }
         }
         .frame(width: 720, height: 480)
+        .onAppear {
+            clockString = Self.currentTimeString()
+        }
+        .onReceive(clockTimer) { _ in
+            clockString = Self.currentTimeString()
+        }
+    }
+
+    private static func currentTimeString() -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return fmt.string(from: Date())
     }
 
     // MARK: - Layout Dispatch
@@ -71,10 +88,10 @@ struct ThemePreviewView: View {
 
     private var dramaticLayout: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: 90)
+            Spacer().frame(height: 70)
 
             Text("⚠  \(displayName)")
-                .font(.system(size: 38, weight: .black))
+                .font(.system(size: 28, weight: .black))
                 .foregroundColor(Color(theme.titleTextColor))
                 .multilineTextAlignment(.center)
 
@@ -82,18 +99,21 @@ struct ThemePreviewView: View {
                 .fill(Color(theme.primary).opacity(0.6))
                 .frame(height: 1)
                 .frame(maxWidth: 480)
-                .padding(.top, 18)
+                .padding(.top, 14)
+
+            Text(clockString)
+                .font(.system(size: 40, weight: .bold, design: .monospaced))
+                .foregroundColor(Color(theme.primary))
+                .padding(.top, 22)
 
             Text(sampleText)
-                .font(.system(size: 20, weight: .medium))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundColor(Color(theme.bodyTextColor))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-                .padding(.top, 28)
+                .padding(.top, 22)
 
-            countdownLabel.padding(.top, 36)
-            closeButtonPreview.padding(.top, 10)
-
+            countdownLabel.padding(.top, 28)
             Spacer()
         }
     }
@@ -102,27 +122,25 @@ struct ThemePreviewView: View {
 
     private var sereneLayout: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: 80)
-
-            Text("◉")
-                .font(.system(size: 80, weight: .ultraLight))
-                .foregroundColor(Color(theme.primary).opacity(0.8))
+            Spacer().frame(height: 70)
 
             Text(displayName)
-                .font(.system(size: 16, weight: .light))
-                .foregroundColor(Color(theme.primary).opacity(0.9))
-                .padding(.top, 4)
+                .font(.system(size: 14, weight: .light))
+                .foregroundColor(Color(theme.primary).opacity(0.65))
+
+            Text(clockString)
+                .font(.system(size: 44, weight: .ultraLight, design: .monospaced))
+                .foregroundColor(Color(theme.primary))
+                .padding(.top, 12)
 
             Text(sampleText)
-                .font(.system(size: 18, weight: .regular))
+                .font(.system(size: 17, weight: .regular))
                 .foregroundColor(Color(theme.bodyTextColor))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 60)
-                .padding(.top, 24)
+                .padding(.top, 28)
 
-            countdownLabel.padding(.top, 32)
-            closeButtonPreview.padding(.top, 10)
-
+            countdownLabel.padding(.top, 28)
             Spacer()
         }
     }
@@ -133,32 +151,36 @@ struct ThemePreviewView: View {
         HStack(alignment: .top, spacing: 0) {
             Spacer().frame(width: 60)
 
-            // Vertical accent bar
             RoundedRectangle(cornerRadius: 3)
-                .fill(Color(theme.primary).opacity(0.7))
-                .frame(width: 5, height: 200)
-                .padding(.top, 80)
+                .fill(Color(theme.primary).opacity(0.6))
+                .frame(width: 5, height: 220)
+                .padding(.top, 70)
 
-            VStack(alignment: .leading, spacing: 10) {
-                Spacer().frame(height: 80)
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer().frame(height: 70)
 
                 Text("🌿")
-                    .font(.system(size: 56))
+                    .font(.system(size: 44))
 
                 Text(displayName)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Color(theme.titleTextColor))
+                    .padding(.top, 6)
+
+                Text(clockString)
+                    .font(.system(size: 32, weight: .bold, design: .monospaced))
+                    .foregroundColor(Color(theme.primary))
+                    .padding(.top, 8)
 
                 Text(sampleText)
-                    .font(.system(size: 18, weight: .regular))
+                    .font(.system(size: 15, weight: .regular))
                     .foregroundColor(Color(theme.bodyTextColor))
-                    .padding(.top, 8)
-                    .frame(maxWidth: 460, alignment: .leading)
+                    .padding(.top, 14)
+                    .frame(maxWidth: 400, alignment: .leading)
 
                 countdownLabel
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 20)
-                closeButtonPreview.padding(.top, 8)
+                    .padding(.top, 18)
 
                 Spacer()
             }
@@ -172,30 +194,44 @@ struct ThemePreviewView: View {
 
     private var terminalLayout: some View {
         HStack(alignment: .top, spacing: 0) {
-            Spacer().frame(width: 110)
+            Spacer().frame(width: 90)
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer().frame(height: 100)
+                Spacer().frame(height: 80)
 
-                Text("> \(displayName) —")
+                Text("> ALERT ─────────────────────────────────")
+                    .font(.system(size: 12, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.primary).opacity(0.50))
+
+                Text("  RULE   : \(displayName)")
                     .font(.system(size: 13, weight: .regular, design: .monospaced))
-                    .foregroundColor(Color(theme.primary).opacity(0.55))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .padding(.top, 10)
+
+                HStack(spacing: 0) {
+                    Text("  TIME   : ")
+                        .font(.system(size: 20, weight: .medium, design: .monospaced))
+                        .foregroundColor(Color(theme.bodyTextColor).opacity(0.55))
+                    Text(clockString)
+                        .font(.system(size: 20, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(theme.primary))
+                }
+                .padding(.top, 8)
+
+                Text("  NOTICE : \(sampleText)")
+                    .font(.system(size: 13, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .frame(maxWidth: 460, alignment: .leading)
+                    .padding(.top, 8)
 
                 Text("─────────────────────────────────────────")
                     .font(.system(size: 10, weight: .regular, design: .monospaced))
                     .foregroundColor(Color(theme.primary).opacity(0.25))
-                    .padding(.top, 8)
-
-                Text("  \(sampleText)")
-                    .font(.system(size: 18, weight: .medium, design: .monospaced))
-                    .foregroundColor(Color(theme.bodyTextColor))
                     .padding(.top, 14)
-                    .frame(maxWidth: 480, alignment: .leading)
 
                 countdownLabel
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 24)
-                closeButtonPreview.padding(.top, 8)
+                    .padding(.top, 12)
 
                 Spacer()
             }
@@ -208,36 +244,41 @@ struct ThemePreviewView: View {
 
     private var gentleLayout: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: 60)
+            Spacer().frame(height: 44)
 
             Text("🌸  🌸  🌸  🌸  🌸")
-                .font(.system(size: 28))
+                .font(.system(size: 24))
 
             Text(displayName)
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(Color(theme.titleTextColor))
-                .padding(.top, 14)
+                .padding(.top, 12)
 
-            // Rounded container
-            Text(sampleText)
-                .font(.system(size: 19, weight: .medium))
-                .foregroundColor(Color(theme.bodyTextColor))
-                .multilineTextAlignment(.center)
+            // Clock card
+            Text(clockString)
+                .font(.system(size: 32, weight: .medium, design: .monospaced))
+                .foregroundColor(Color(theme.titleTextColor))
                 .padding(.horizontal, 28)
-                .padding(.vertical, 20)
+                .padding(.vertical, 16)
                 .frame(maxWidth: 500)
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 14)
                         .fill(Color(theme.primary).opacity(0.08))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color(theme.primary).opacity(0.2), lineWidth: 1.5)
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color(theme.primary).opacity(0.22), lineWidth: 1.5)
                         )
                 )
-                .padding(.top, 20)
+                .padding(.top, 16)
 
-            countdownLabel.padding(.top, 20)
-            closeButtonPreview.padding(.top, 8)
+            Text(sampleText)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Color(theme.bodyTextColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+                .padding(.top, 16)
+
+            countdownLabel.padding(.top, 16)
             Spacer()
         }
         .padding(.horizontal, 40)
@@ -247,30 +288,34 @@ struct ThemePreviewView: View {
 
     private var playfulLayout: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: 60)
+            Spacer().frame(height: 44)
 
             Text("✨  💕  ✨")
-                .font(.system(size: 32))
+                .font(.system(size: 28))
 
             Text("✨ \(displayName) ✨")
-                .font(.system(size: 36, weight: .bold))
+                .font(.system(size: 28, weight: .bold))
                 .foregroundColor(Color(theme.titleTextColor))
                 .padding(.top, 6)
 
+            Text(clockString)
+                .font(.system(size: 38, weight: .bold, design: .monospaced))
+                .foregroundColor(Color(theme.primary))
+                .padding(.top, 18)
+
             Text(sampleText)
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 15, weight: .medium))
                 .foregroundColor(Color(theme.bodyTextColor))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-                .padding(.top, 24)
-
-            Text("♡  ♡  ♡  ♡  ♡  ♡")
-                .font(.system(size: 18))
-                .foregroundColor(Color(theme.primary).opacity(0.4))
                 .padding(.top, 18)
 
-            countdownLabel.padding(.top, 16)
-            closeButtonPreview.padding(.top, 8)
+            Text("♡  ♡  ♡  ♡  ♡  ♡")
+                .font(.system(size: 16))
+                .foregroundColor(Color(theme.primary).opacity(0.38))
+                .padding(.top, 14)
+
+            countdownLabel.padding(.top, 12)
             Spacer()
         }
     }
@@ -279,39 +324,39 @@ struct ThemePreviewView: View {
 
     private var colorfulLayout: some View {
         HStack(alignment: .top, spacing: 0) {
-            Spacer().frame(width: 60)
+            Spacer().frame(width: 50)
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer().frame(height: 70)
+                Spacer().frame(height: 56)
 
-                ZStack(alignment: .topLeading) {
+                // Clock block
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(clockString)
+                        .font(.system(size: 32, weight: .heavy, design: .monospaced))
+                        .foregroundColor(Color(theme.titleTextColor))
+                    Text(displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(Color(theme.primary).opacity(0.70))
+                    Text("— BREAK TIME —")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(Color(theme.primary).opacity(0.50))
+                }
+                .padding(16)
+                .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(theme.primary).opacity(0.12))
-                        .frame(width: 380, height: 145)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("🍭")
-                            .font(.system(size: 46))
-                        Text(displayName)
-                            .font(.system(size: 36, weight: .heavy))
-                            .foregroundColor(Color(theme.titleTextColor))
-                        Text("— BREAK TIME —")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(Color(theme.primary).opacity(0.6))
-                    }
-                    .padding(14)
-                }
+                )
+                .frame(maxWidth: 420, alignment: .leading)
 
                 Text(sampleText)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundColor(Color(theme.bodyTextColor))
-                    .frame(maxWidth: 480, alignment: .leading)
-                    .padding(.top, 28)
+                    .frame(maxWidth: 440, alignment: .leading)
+                    .padding(.top, 22)
 
                 countdownLabel
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 24)
-                closeButtonPreview.padding(.top, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 18)
 
                 Spacer()
             }
@@ -324,36 +369,48 @@ struct ThemePreviewView: View {
 
     private var technicalLayout: some View {
         HStack(alignment: .top, spacing: 0) {
-            Spacer().frame(width: 90)
+            Spacer().frame(width: 70)
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer().frame(height: 100)
+                Spacer().frame(height: 80)
 
                 Text("SYSTEM  ══════════════════════════════")
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundColor(Color(theme.primary).opacity(0.7))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color(theme.primary).opacity(0.65))
 
-                Group {
-                    Text("RULE     : \(displayName)")
-                    Text("REMINDER : \(sampleText)")
+                Text("RULE     : \(displayName)")
+                    .font(.system(size: 12, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .padding(.top, 12)
+
+                HStack(spacing: 0) {
+                    Text("TIME     : ")
+                        .font(.system(size: 20, weight: .medium, design: .monospaced))
+                        .foregroundColor(Color(theme.bodyTextColor).opacity(0.55))
+                    Text(clockString)
+                        .font(.system(size: 20, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(theme.primary))
                 }
-                .font(.system(size: 13, weight: .regular, design: .monospaced))
-                .foregroundColor(Color(theme.bodyTextColor))
-                .padding(.top, 10)
+                .padding(.top, 8)
+
+                Text("REMINDER : \(sampleText)")
+                    .font(.system(size: 12, weight: .regular, design: .monospaced))
+                    .foregroundColor(Color(theme.bodyTextColor))
+                    .frame(maxWidth: 500, alignment: .leading)
+                    .padding(.top, 8)
 
                 Text("──────────────────────────────────────")
                     .font(.system(size: 10, weight: .regular, design: .monospaced))
-                    .foregroundColor(Color(theme.primary).opacity(0.3))
-                    .padding(.top, 14)
+                    .foregroundColor(Color(theme.primary).opacity(0.28))
+                    .padding(.top, 12)
 
                 countdownLabel
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 14)
-                closeButtonPreview.padding(.top, 8)
+                    .padding(.top, 12)
 
                 Spacer()
             }
-            .frame(maxWidth: 580, alignment: .leading)
+            .frame(maxWidth: 560, alignment: .leading)
 
             Spacer()
         }
@@ -362,19 +419,24 @@ struct ThemePreviewView: View {
     // MARK: - Shared Sub-views
 
     private var countdownLabel: some View {
-        Text("10 秒后可关闭…")
-            .font(.system(size: 14, weight: .regular))
+        Text("10 秒后可关闭")
+            .font(.system(size: 12, weight: .regular))
             .foregroundColor(Color(theme.countdownColor))
     }
 
     private var closeButtonPreview: some View {
-        Text("✓   我知道了，开始休息")
-            .font(.system(size: 15, weight: .bold))
-            .foregroundColor(.white)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 11)
-            .background(Color(theme.primary).opacity(0.65))
-            .cornerRadius(10)
-            .opacity(0.65)
+        Text("OK")
+            .font(.system(size: 13, weight: .medium))
+            .foregroundColor(Color(theme.primary).opacity(0.70))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(Color(theme.primary).opacity(0.10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 9)
+                            .stroke(Color(theme.primary).opacity(0.30), lineWidth: 1)
+                    )
+            )
     }
 }
