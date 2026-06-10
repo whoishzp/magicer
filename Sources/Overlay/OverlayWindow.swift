@@ -28,6 +28,9 @@ class OverlayManager {
     private static var keyMonitor: Any?
     private static var enterPressCount = 0
     private static var lastEnterTime: Date?
+    /// Required consecutive Enter presses within 3 s to force-show the close button.
+    /// 4 = default; 10 = hard-lock mode (rule.hardLock == true).
+    private static var enterPressThreshold = 4
     private static var spaceObserver: NSObjectProtocol?
     private static var onDismiss: (() -> Void)?
 
@@ -41,6 +44,7 @@ class OverlayManager {
         clockLabels.removeAll()
         enterPressCount = 0
         lastEnterTime = nil
+        enterPressThreshold = rule.hardLock ? 10 : 4
 
         let theme = ThemeColors.find(rule.themeId)
 
@@ -132,7 +136,7 @@ class OverlayManager {
         return win
     }
 
-    // MARK: - Enter key backdoor (4 presses within 3 s)
+    // MARK: - Enter key backdoor (N presses within 3 s; N = 4 default, 10 if hardLock)
 
     private static func installKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -144,7 +148,7 @@ class OverlayManager {
                 return nil
             }
 
-            // Enter backdoor — 4 presses within 3 s forces close button to appear
+            // Enter backdoor — N presses within 3 s forces close button to appear
             guard event.keyCode == 36 else { return event }
             let now = Date()
             if let last = lastEnterTime, now.timeIntervalSince(last) < 3.0 {
@@ -153,7 +157,7 @@ class OverlayManager {
                 enterPressCount = 1
             }
             lastEnterTime = now
-            if enterPressCount >= 4 {
+            if enterPressCount >= enterPressThreshold {
                 enterPressCount = 0
                 DispatchQueue.main.async {
                     countdownTimer?.invalidate(); countdownTimer = nil

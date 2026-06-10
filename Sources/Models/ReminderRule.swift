@@ -59,6 +59,8 @@ struct ReminderRule: Codable, Identifiable, Equatable {
     var logDirectoryPath: String
     /// Custom label for the overlay close button. Empty = "OK".
     var closeButtonText: String
+    /// When true, the Enter-key backdoor requires 10 presses instead of the default 4.
+    var hardLock: Bool
 
     // Custom CodingKeys and decoder to maintain backward compatibility.
     // New fields fall back to defaults when absent in stored data.
@@ -66,7 +68,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         case id, name, actionKind, triggerMode, intervalMinutes, scheduledTimes
         case onceDate, followupMinutes
         case durationSeconds, canCloseImmediately, reminderText, themeId, isEnabled
-        case shellCommand, logDirectoryPath, closeButtonText
+        case shellCommand, logDirectoryPath, closeButtonText, hardLock
     }
 
     init(from decoder: Decoder) throws {
@@ -87,6 +89,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         shellCommand     = (try? c.decode(String.self,        forKey: .shellCommand)) ?? ""
         logDirectoryPath = (try? c.decode(String.self,        forKey: .logDirectoryPath)) ?? ""
         closeButtonText  = (try? c.decode(String.self,        forKey: .closeButtonText)) ?? ""
+        hardLock         = (try? c.decode(Bool.self,          forKey: .hardLock)) ?? false
     }
 
     init(
@@ -105,7 +108,8 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         isEnabled: Bool = true,
         shellCommand: String = "",
         logDirectoryPath: String = "",
-        closeButtonText: String = ""
+        closeButtonText: String = "",
+        hardLock: Bool = false
     ) {
         self.id = id
         self.name = name
@@ -123,6 +127,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         self.shellCommand = shellCommand
         self.logDirectoryPath = logDirectoryPath
         self.closeButtonText = closeButtonText
+        self.hardLock = hardLock
     }
 }
 
