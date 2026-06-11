@@ -44,7 +44,7 @@ class OverlayManager {
         clockLabels.removeAll()
         enterPressCount = 0
         lastEnterTime = nil
-        enterPressThreshold = rule.hardLock ? 10 : 4
+        enterPressThreshold = rule.enterPressThreshold
 
         let theme = ThemeColors.find(rule.themeId)
 

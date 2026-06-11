@@ -94,25 +94,32 @@ struct DesktopTimingPanel: View {
             HStack(alignment: .top) {
                 Text("关闭行为")
                     .frame(width: 80, alignment: .leading)
-                VStack(alignment: .leading, spacing: 6) {
-                    Toggle("忽略提示时长，弹窗出现后立即可关", isOn: Binding(
-                        get: { rule.canCloseImmediately },
-                        set: { v in
-                            rule.canCloseImmediately = v
-                            if v { rule.hardLock = false }
-                        }
-                    ))
-                    Toggle("不可直接关闭（需按 10 次回车才能关闭）", isOn: Binding(
-                        get: { rule.hardLock },
-                        set: { v in
-                            rule.hardLock = v
-                            if v { rule.canCloseImmediately = false }
-                        }
-                    ))
-                    Text("两项互斥。都不勾时：倒计时结束后可关，4 次回车强制显示关闭按钮")
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("忽略提示时长，弹窗出现后立即可关", isOn: $rule.canCloseImmediately)
+                    Text("开启后「提示时长」设置失效")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+            }
+
+            HStack(alignment: .center) {
+                Text("回车关闭次数")
+                    .frame(width: 80, alignment: .leading)
+                TextField("", value: $rule.enterPressThreshold, format: .number)
+                    .frame(width: 50)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .onChange(of: rule.enterPressThreshold) { v in
+                        rule.enterPressThreshold = max(1, min(100, v))
+                    }
+                Stepper("", value: $rule.enterPressThreshold, in: 1...100)
+                    .labelsHidden()
+                Text("次")
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("弹窗期间 3 秒内连按 Enter N 次强制显示关闭按钮")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
     }
