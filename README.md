@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-1.85.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.86.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -304,6 +304,12 @@ git tag v1.48.0 && git push origin v1.48.0
 - 全屏覆盖进一步加固：去掉 `.transient`（该 flag 会在 Mission Control 切换时隐藏窗口），窗口层级提升至 `screenSaver + 200`
 - 新增 MCP 服务：Magicer 内嵌 HTTP server（127.0.0.1:18879），AI Agent 可通过 `cursor/magicer_mcp.py` 读写提醒规则
 - 提醒规则编辑页新增**时间冲突检测**：定点/一次提醒时间与其他规则冲突时展示橙色内联警告
+
+### v1.86.0（2026-06-11）
+
+- **CursorGood 原生模块**：内置 MCP HTTP 服务（18880 端口），原生 SwiftUI 会话列表 + 对话框；AI 调用时自动弹出 ONE 并定位 session；历史会话永久保留于 `~/.cursor/data/one/cursorgood/`，支持手动删除
+- **Skill 管理（系统设置）**：外观设置下新增「AI Skill 管理」区块，支持对每个 AI 模块手动导出/安装 Skill 文档；Skill 安装不再自动执行
+- **MCP 工具名**：`CursorGood`（与 cursor-good VS Code 扩展一致，cursor-good 扩展可移除）
 
 ### v1.85.0（2026-06-11）
 
