@@ -7,6 +7,7 @@ struct CGChatView: View {
     @State private var pastedImages: [NSImage] = []
     @State private var isHoveringDrop = false
     @FocusState private var isInputFocused: Bool
+    @State private var pasteMonitor: Any? = nil
 
     private var session: CGSession? {
         guard let id = mgr.selectedSessionId else { return nil }
@@ -14,16 +15,35 @@ struct CGChatView: View {
     }
 
     var body: some View {
-        if let session = session {
-            VStack(spacing: 0) {
-                chatHeader(session)
-                Divider()
-                messageList(session)
-                Divider()
-                inputArea
+        Group {
+            if let session = session {
+                VStack(spacing: 0) {
+                    chatHeader(session)
+                    Divider()
+                    messageList(session)
+                    Divider()
+                    inputArea
+                }
+            } else {
+                emptyState
             }
-        } else {
-            emptyState
+        }
+        .onAppear {
+            pasteMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [self] event in
+                // Intercept Cmd+V only when clipboard contains image data
+                if event.modifierFlags.contains(.command),
+                   event.characters == "v",
+                   let types = NSPasteboard.general.types,
+                   types.contains(.png) || types.contains(.tiff) {
+                    pasteImageFromClipboard()
+                    return nil  // consume event
+                }
+                return event  // pass through (let TextEditor handle text paste)
+            }
+        }
+        .onDisappear {
+            if let m = pasteMonitor { NSEvent.removeMonitor(m) }
+            pasteMonitor = nil
         }
     }
 

@@ -35,6 +35,7 @@ hdiutil create \
   -o "${DMG_NAME}"
 
 rm -rf "${TMP_DIR}"
+rm -rf "${BINARY_NAME}.app"
 
 echo "▶ Saving to dist/..."
 mkdir -p "${DIST_DIR}"
