@@ -104,7 +104,7 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 18)
-        .frame(width: 156)
+        .frame(width: 168)
         .background(Color(NSColor.controlBackgroundColor))
     }
 
@@ -127,6 +127,7 @@ struct SettingsView: View {
                     .frame(width: 18)
                 Text(tab.rawValue)
                     .font(.system(size: 13, weight: .medium))
+                    .lineLimit(1)
                 Spacer()
             }
             .padding(.horizontal, 12)
