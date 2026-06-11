@@ -58,12 +58,12 @@ enum SkillInstaller {
             }
             return InstallStatus(isInstalled: false, detail: "未安装")
 
-        case .cursorGoodMCP(let port):
+        case .cursorGoodMCP:
             let mcpPath = cursorConfigDir.appendingPathComponent("mcp.json")
             guard let data = try? Data(contentsOf: mcpPath),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let servers = json["mcpServers"] as? [String: Any],
-                  let entry = servers["user-cursor-good"] as? [String: Any],
+                  let entry = servers[CGMcpRegister.mcpKey] as? [String: Any],
                   let url = entry["url"] as? String else {
                 return InstallStatus(isInstalled: false, detail: "未注册 MCP")
             }
@@ -75,10 +75,9 @@ enum SkillInstaller {
 
     @discardableResult
     static func install(module: Module) -> Result<String, Error> {
-        let src = skillFileURL(module: module)
-        guard let src = src else {
+        guard let content = skillContent(for: module) else {
             return .failure(NSError(domain: "SkillInstaller", code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "找不到 Skill 文件"]))
+                userInfo: [NSLocalizedDescriptionKey: "找不到 Skill 内容"]))
         }
 
         switch module.installAction {
@@ -87,30 +86,21 @@ enum SkillInstaller {
             let dest = destDir.appendingPathComponent("SKILL.md")
             do {
                 try FileManager.default.createDirectory(at: destDir, withIntermediateDirectories: true)
-                if FileManager.default.fileExists(atPath: dest.path) {
-                    try FileManager.default.removeItem(at: dest)
-                }
-                try FileManager.default.copyItem(at: src, to: dest)
+                try content.write(to: dest, atomically: true, encoding: .utf8)
                 return .success("已安装到\n\(dest.path)")
             } catch {
                 return .failure(error)
             }
 
         case .cursorGoodMCP(let port):
-            // Write mcp.json
             CGMcpRegister.register(port: port)
-            // Copy skill doc
             let destDir = skillsDir.appendingPathComponent("cursorgood", isDirectory: true)
             let dest = destDir.appendingPathComponent("SKILL.md")
             do {
                 try FileManager.default.createDirectory(at: destDir, withIntermediateDirectories: true)
-                if FileManager.default.fileExists(atPath: dest.path) {
-                    try FileManager.default.removeItem(at: dest)
-                }
-                try FileManager.default.copyItem(at: src, to: dest)
+                try content.write(to: dest, atomically: true, encoding: .utf8)
             } catch {
-                // Non-fatal if skill copy fails
-                NSLog("[SkillInstaller] Warning: skill copy failed: \(error)")
+                NSLog("[SkillInstaller] Warning: skill write failed: \(error)")
             }
             return .success("MCP 已注册到\n~/.cursor/mcp.json\n端口 \(port)")
         }
@@ -119,14 +109,14 @@ enum SkillInstaller {
     // MARK: - Export
 
     static func export(module: Module) {
-        guard let src = skillFileURL(module: module) else { return }
+        guard let content = skillContent(for: module) else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.plainText]
         panel.nameFieldStringValue = "SKILL.md"
         panel.message = "选择 \(module.name) Skill 文档的导出位置"
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            try? FileManager.default.copyItem(at: src, to: url)
+            try? content.write(to: url, atomically: true, encoding: .utf8)
         }
     }
 
@@ -141,18 +131,12 @@ enum SkillInstaller {
         cursorConfigDir.appendingPathComponent("skills", isDirectory: true)
     }
 
-    private static func skillFileURL(module: Module) -> URL? {
-        // Try bundle first (production), fall back to source tree (dev)
-        if let url = Bundle.main.url(forResource: "Skills/\(module.skillFilename)", withExtension: nil) {
-            return url
+    /// Returns the Skill markdown content for a module, embedded in code.
+    static func skillContent(for module: Module) -> String? {
+        switch module.id {
+        case "reminders":  return SkillContent.reminders
+        case "cursorgood": return SkillContent.cursorGood
+        default: return nil
         }
-        // Dev fallback: look relative to project root
-        let projectDir = Bundle.main.bundleURL
-            .deletingLastPathComponent()  // .app/Contents/MacOS → .app/Contents → .app
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        let devPath = projectDir.appendingPathComponent("cursor/skills/\(module.skillFilename)")
-        if FileManager.default.fileExists(atPath: devPath.path) { return devPath }
-        return nil
     }
 }

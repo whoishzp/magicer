@@ -8,10 +8,17 @@ struct CGChatView: View {
     @State private var isHoveringDrop = false
     @FocusState private var isInputFocused: Bool
     @State private var pasteMonitor: Any? = nil
+    @State private var lastSessionId: String? = nil
+    @AppStorage("cgInputHeight") private var inputHeight: Double = 120
+    @State private var dragStartHeight: Double = 0
 
     private var session: CGSession? {
         guard let id = mgr.selectedSessionId else { return nil }
         return mgr.sessions.first { $0.id == id }
+    }
+
+    private var canSend: Bool {
+        !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !pastedImages.isEmpty
     }
 
     var body: some View {
@@ -29,17 +36,19 @@ struct CGChatView: View {
             }
         }
         .onAppear {
-            pasteMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [self] event in
-                // Intercept Cmd+V only when clipboard contains image data
-                if event.modifierFlags.contains(.command),
-                   event.characters == "v",
-                   let types = NSPasteboard.general.types,
-                   types.contains(.png) || types.contains(.tiff) {
-                    pasteImageFromClipboard()
-                    return nil  // consume event
-                }
-                return event  // pass through (let TextEditor handle text paste)
+            installPasteMonitor()
+            lastSessionId = mgr.selectedSessionId
+            if let sid = mgr.selectedSessionId {
+                inputText = mgr.draftTexts[sid] ?? ""
             }
+        }
+        .onChange(of: mgr.selectedSessionId) { newId in
+            if let old = lastSessionId {
+                mgr.draftTexts[old] = inputText
+            }
+            inputText = mgr.draftTexts[newId ?? ""] ?? ""
+            pastedImages = []
+            lastSessionId = newId
         }
         .onDisappear {
             if let m = pasteMonitor { NSEvent.removeMonitor(m) }
@@ -59,6 +68,16 @@ struct CGChatView: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
+            Button {
+                exportChat(session)
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("导出聊天记录")
+
             Button {
                 mgr.deleteSession(id: session.id)
             } label: {
@@ -87,9 +106,22 @@ struct CGChatView: View {
                 .padding(16)
             }
             .onChange(of: session.messages.count) { _ in
-                if let lastId = session.messages.last?.id {
-                    withAnimation { proxy.scrollTo(lastId, anchor: .bottom) }
-                }
+                scrollToBottom(proxy: proxy, session: session)
+            }
+            .onChange(of: mgr.selectedSessionId) { _ in
+                scrollToBottom(proxy: proxy, session: session)
+            }
+            .onAppear {
+                scrollToBottom(proxy: proxy, session: session)
+            }
+        }
+    }
+
+    private func scrollToBottom(proxy: ScrollViewProxy, session: CGSession) {
+        guard let lastId = session.messages.last?.id else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(lastId, anchor: .bottom)
             }
         }
     }
@@ -106,42 +138,39 @@ struct CGChatView: View {
     // MARK: - AI message bubble
 
     private func aiMessageView(_ msg: CGMessage) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 13))
-                    .foregroundColor(.blue)
-                    .frame(width: 20)
+        HStack(alignment: .top, spacing: 0) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(msg.text)
                     .font(.system(size: 13))
+                    .foregroundColor(.primary)
                     .textSelection(.enabled)
-                Spacer()
-            }
 
-            // Option buttons
-            if !msg.options.isEmpty {
-                CGFlowLayout(spacing: 8) {
-                    ForEach(msg.options, id: \.self) { opt in
-                        Button(opt) {
-                            submitReply(text: opt)
+                if !msg.options.isEmpty {
+                    CGFlowLayout(spacing: 8) {
+                        ForEach(msg.options, id: \.self) { opt in
+                            Button(opt) {
+                                submitReply(text: opt)
+                            }
+                            .buttonStyle(OptionButtonStyle())
                         }
-                        .buttonStyle(OptionButtonStyle())
                     }
                 }
-                .padding(.leading, 28)
-            }
 
-            Text(msg.timestamp, style: .time)
-                .font(.system(size: 10))
-                .foregroundColor(.secondary)
-                .padding(.leading, 28)
+                Text(msg.timestamp, style: .time)
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            .padding(12)
+            .background(Color(NSColor.windowBackgroundColor))
+            .cornerRadius(10)
+
+            Spacer()
         }
-        .padding(12)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(10)
     }
 
     // MARK: - User message bubble
+
+    private static let wechatGreen = Color(red: 0.58, green: 0.93, blue: 0.41)
 
     private func userMessageView(_ msg: CGMessage) -> some View {
         HStack {
@@ -150,14 +179,13 @@ struct CGChatView: View {
                 if !msg.text.isEmpty {
                     Text(msg.text)
                         .font(.system(size: 13))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .textSelection(.enabled)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.blue)
+                        .background(Self.wechatGreen)
                         .cornerRadius(10)
                 }
-                // Attached images
                 ForEach(msg.images, id: \.self) { b64 in
                     if let data = Data(base64Encoded: b64),
                        let img = NSImage(data: data) {
@@ -168,9 +196,19 @@ struct CGChatView: View {
                             .cornerRadius(8)
                     }
                 }
-                Text(msg.timestamp, style: .time)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    if msg.deliveryStatus == .pending {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                            .foregroundColor(.orange)
+                        Text("等待 AI 响应")
+                            .font(.system(size: 10))
+                            .foregroundColor(.orange)
+                    }
+                    Text(msg.timestamp, style: .time)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }
@@ -178,87 +216,112 @@ struct CGChatView: View {
     // MARK: - Input area
 
     private var inputArea: some View {
-        VStack(spacing: 8) {
-            // Pasted images preview
-            if !pastedImages.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(pastedImages.indices, id: \.self) { i in
-                            ZStack(alignment: .topTrailing) {
-                                Image(nsImage: pastedImages[i])
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 48, height: 48)
-                                    .clipped()
-                                    .cornerRadius(6)
-                                Button {
-                                    pastedImages.remove(at: i)
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.white)
+        VStack(spacing: 0) {
+            // Drag handle to resize input area
+            Rectangle()
+                .fill(Color(NSColor.separatorColor).opacity(0.5))
+                .frame(height: 4)
+                .contentShape(Rectangle())
+                .onHover { hovering in
+                    if hovering {
+                        NSCursor.resizeUpDown.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 1)
+                        .onChanged { value in
+                            if dragStartHeight == 0 { dragStartHeight = inputHeight }
+                            let newHeight = dragStartHeight - value.translation.height
+                            inputHeight = min(max(newHeight, 80), 300)
+                        }
+                        .onEnded { _ in
+                            dragStartHeight = 0
+                        }
+                )
+
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    TextEditor(text: $inputText)
+                        .font(.system(size: 13))
+                        .scrollContentBackground(.hidden)
+                        .focused($isInputFocused)
+                        .frame(maxHeight: .infinity)
+
+                    if !pastedImages.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                ForEach(pastedImages.indices, id: \.self) { i in
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(nsImage: pastedImages[i])
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 48, height: 48)
+                                            .clipped()
+                                            .cornerRadius(6)
+                                        Button {
+                                            pastedImages.remove(at: i)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.white)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .offset(x: 5, y: -5)
+                                    }
                                 }
-                                .buttonStyle(.plain)
-                                .offset(x: 5, y: -5)
                             }
+                            .padding(.bottom, 6)
                         }
                     }
-                    .padding(.horizontal, 12)
-                }
-            }
 
-            HStack(alignment: .bottom, spacing: 8) {
-                TextEditor(text: $inputText)
-                    .font(.system(size: 13))
-                    .frame(minHeight: 36, maxHeight: 100)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(NSColor.separatorColor), lineWidth: 1)
-                    )
-                    .focused($isInputFocused)
+                    HStack(spacing: 8) {
+                        Button {
+                            pasteImageFromClipboard()
+                        } label: {
+                            Image(systemName: "photo.badge.plus")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("粘贴图片")
 
-                VStack(spacing: 4) {
-                    Button {
-                        pasteImageFromClipboard()
-                    } label: {
-                        Image(systemName: "photo.badge.plus")
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                            .padding(6)
-                            .background(Color(NSColor.controlBackgroundColor))
-                            .cornerRadius(6)
+                        Spacer()
+
+                        Text("Ctrl+Enter")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary.opacity(0.4))
+
+                        Button {
+                            sendInput()
+                        } label: {
+                            Text("发送")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(canSend ? .white : .secondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 5)
+                                .background(canSend ? Color.blue : Color(NSColor.controlBackgroundColor))
+                                .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!canSend)
+                        .keyboardShortcut(.return, modifiers: .control)
                     }
-                    .buttonStyle(.plain)
-                    .help("粘贴图片")
-
-                    Button {
-                        sendInput()
-                    } label: {
-                        Image(systemName: "paperplane.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(.white)
-                            .padding(8)
-                            .background(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && pastedImages.isEmpty
-                                        ? Color.secondary : Color.blue)
-                            .cornerRadius(8)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && pastedImages.isEmpty)
-                    .help("发送（Ctrl+Enter）")
-                    .keyboardShortcut(.return, modifiers: .control)
+                    .padding(.top, 4)
                 }
+                .padding(10)
+                .frame(height: max(inputHeight, 80))
+                .background(Color(NSColor.textBackgroundColor))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(NSColor.separatorColor), lineWidth: 1)
+                )
+                .padding(.horizontal, 12)
             }
-            .padding(.horizontal, 12)
-
-            Text("Ctrl+Enter 发送")
-                .font(.system(size: 10))
-                .foregroundColor(.secondary.opacity(0.5))
+            .padding(.vertical, 10)
         }
-        .padding(.vertical, 10)
     }
 
     // MARK: - Actions
@@ -278,6 +341,7 @@ struct CGChatView: View {
         mgr.submitReply(sessionId: sessionId, text: text, images: b64images)
         inputText = ""
         pastedImages = []
+        mgr.draftTexts.removeValue(forKey: sessionId)
     }
 
     private func submitReply(text: String) {
@@ -285,12 +349,64 @@ struct CGChatView: View {
         mgr.submitReply(sessionId: sessionId, text: text, images: [])
     }
 
+    private func exportChat(_ session: CGSession) {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        var lines: [String] = []
+        lines.append("# \(session.displayTitle)")
+        lines.append("Session: \(session.id)")
+        lines.append("导出时间: \(df.string(from: Date()))")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+        for msg in session.messages {
+            let role = msg.role == .ai ? "🤖 AI" : "👤 用户"
+            let time = df.string(from: msg.timestamp)
+            lines.append("**\(role)** (\(time))")
+            lines.append("")
+            if !msg.text.isEmpty { lines.append(msg.text) }
+            if !msg.images.isEmpty {
+                lines.append("_[\(msg.images.count) 张图片]_")
+            }
+            if !msg.options.isEmpty {
+                lines.append("选项: \(msg.options.joined(separator: " | "))")
+            }
+            lines.append("")
+        }
+        let content = lines.joined(separator: "\n")
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.plainText]
+        let safeName = session.displayTitle
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+        panel.nameFieldStringValue = "\(safeName).md"
+        panel.message = "选择聊天记录导出位置"
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            try? content.write(to: url, atomically: true, encoding: .utf8)
+        }
+    }
+
+    private func installPasteMonitor() {
+        if pasteMonitor != nil { return }
+        pasteMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [self] event in
+            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                  event.charactersIgnoringModifiers == "v" else { return event }
+            let pb = NSPasteboard.general
+            guard let types = pb.types else { return event }
+            let hasImage = types.contains(.png) || types.contains(.tiff)
+            let hasText = types.contains(.string)
+            if hasImage && !hasText {
+                pasteImageFromClipboard()
+                return nil
+            }
+            return event
+        }
+    }
+
     private func pasteImageFromClipboard() {
         let pb = NSPasteboard.general
-        guard let types = pb.types,
-              let type = types.first(where: { $0 == .png || $0 == .tiff }),
-              let data = pb.data(forType: type),
-              let img = NSImage(data: data) else { return }
+        guard let img = NSImage(pasteboard: pb) else { return }
         pastedImages.append(img)
     }
 
@@ -319,13 +435,13 @@ private struct OptionButtonStyle: ButtonStyle {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(configuration.isPressed
-                        ? Color.blue.opacity(0.8)
-                        : Color.blue.opacity(0.15))
-            .foregroundColor(.blue)
+                        ? Color.green.opacity(0.3)
+                        : Color(NSColor.controlBackgroundColor))
+            .foregroundColor(.primary)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.blue.opacity(0.4), lineWidth: 1)
+                    .stroke(Color(NSColor.separatorColor), lineWidth: 1)
             )
     }
 }

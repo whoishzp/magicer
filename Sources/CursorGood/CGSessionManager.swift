@@ -9,6 +9,9 @@ final class CGSessionManager: ObservableObject {
     @Published var sessions: [CGSession] = []       // ordered by updatedAt desc
     @Published var selectedSessionId: String? = nil
 
+    /// Per-session draft text preserved across session switches
+    var draftTexts: [String: String] = [:]
+
     /// callId → pending continuation (one per in-flight MCP call)
     private var pendingCalls: [String: CGPendingCall] = [:]
     /// session_id → debounce task (50 ms merge window)
@@ -94,11 +97,12 @@ final class CGSessionManager: ObservableObject {
                     message: String,
                     options: [String]) async -> CGFeedbackResult {
 
-        // Consume any buffered user input for this session (sent before AI called)
-        if var queued = queuedInputs[sessionId], !queued.isEmpty {
-            let first = queued.removeFirst()
-            queuedInputs[sessionId] = queued.isEmpty ? nil : queued
-            return first
+        // Consume all buffered user inputs for this session, merge into one reply
+        if let queued = queuedInputs.removeValue(forKey: sessionId), !queued.isEmpty {
+            let mergedText = queued.map(\.text).filter { !$0.isEmpty }.joined(separator: "\n")
+            let mergedImages = queued.flatMap(\.images)
+            markPendingMessagesDelivered(sessionId: sessionId)
+            return CGFeedbackResult(text: mergedText, images: mergedImages)
         }
 
         // Update session with AI message
@@ -108,9 +112,19 @@ final class CGSessionManager: ObservableObject {
         s.updatedAt = Date()
         updateSession(s)
 
-        // Auto-select & surface the window
-        selectedSessionId = sessionId
-        surfaceWindow()
+        // Smart session switching: don't steal focus if user is viewing another session
+        let windowIsVisible = isWindowVisible()
+        if !windowIsVisible || selectedSessionId == nil {
+            selectedSessionId = sessionId
+            surfaceWindow()
+        } else if selectedSessionId == sessionId {
+            surfaceWindow()
+        } else {
+            // Window open + user viewing different session → mark unread, don't switch
+            if let idx = sessions.firstIndex(where: { $0.id == sessionId }) {
+                sessions[idx].hasUnread = true
+            }
+        }
 
         // Await user reply
         return await withCheckedContinuation { cont in
@@ -123,18 +137,20 @@ final class CGSessionManager: ObservableObject {
 
     func submitReply(sessionId: String, text: String, images: [String]) {
         var s = session(for: sessionId)
-        s.messages.append(CGMessage(role: .user, text: text, images: images))
-        s.updatedAt = Date()
-        updateSession(s)
 
         // Resolve the first pending call that belongs to this session
         if let callId = pendingCalls.values.first(where: { $0.sessionId == sessionId })?.callId,
            let call = pendingCalls.removeValue(forKey: callId) {
+            s.messages.append(CGMessage(role: .user, text: text, images: images, deliveryStatus: .delivered))
+            s.updatedAt = Date()
+            updateSession(s)
             debounceTimers[sessionId]?.cancel()
             debounceTimers[sessionId] = nil
             call.continuation.resume(returning: CGFeedbackResult(text: text, images: images))
         } else {
-            // No pending call — buffer for next AI request
+            s.messages.append(CGMessage(role: .user, text: text, images: images, deliveryStatus: .pending))
+            s.updatedAt = Date()
+            updateSession(s)
             queuedInputs[sessionId, default: []].append(
                 CGFeedbackResult(text: text, images: images))
         }
@@ -164,12 +180,37 @@ final class CGSessionManager: ObservableObject {
         pendingCalls.values.contains { $0.sessionId == sessionId }
     }
 
+    // MARK: - Delivery status
+
+    private func markPendingMessagesDelivered(sessionId: String) {
+        guard let idx = sessions.firstIndex(where: { $0.id == sessionId }) else { return }
+        var changed = false
+        for i in sessions[idx].messages.indices {
+            if sessions[idx].messages[i].deliveryStatus == .pending {
+                sessions[idx].messages[i].deliveryStatus = .delivered
+                changed = true
+            }
+        }
+        if changed { save(sessions[idx]) }
+    }
+
+    // MARK: - Unread management
+
+    func markRead(sessionId: String) {
+        if let idx = sessions.firstIndex(where: { $0.id == sessionId }), sessions[idx].hasUnread {
+            sessions[idx].hasUnread = false
+        }
+    }
+
     // MARK: - Window surface helper
+
+    private func isWindowVisible() -> Bool {
+        NSApp.windows.contains { $0.isVisible && $0.title == "ONE" }
+    }
 
     private func surfaceWindow() {
         DispatchQueue.main.async {
             NSApp.activate(ignoringOtherApps: true)
-            // AppDelegate will handle switching to the CursorGood tab via notification
             NotificationCenter.default.post(name: .openCursorGoodPanel, object: nil)
         }
     }

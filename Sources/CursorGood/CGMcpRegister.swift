@@ -4,6 +4,9 @@ import Foundation
 /// Round 3 will replace auto-registration with manual "Install Skill" button.
 enum CGMcpRegister {
 
+    static let mcpKey = "one-cursor-good"
+    private static let legacyKey = "user-cursor-good"
+
     static func register(port: UInt16) {
         let mcpPath = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".cursor/mcp.json")
@@ -15,7 +18,8 @@ enum CGMcpRegister {
         }
 
         var servers = root["mcpServers"] as? [String: Any] ?? [:]
-        servers["user-cursor-good"] = ["url": "http://127.0.0.1:\(port)/mcp"]
+        servers.removeValue(forKey: legacyKey)
+        servers[mcpKey] = ["url": "http://127.0.0.1:\(port)/mcp"]
         root["mcpServers"] = servers
 
         if let data = try? JSONSerialization.data(withJSONObject: root,

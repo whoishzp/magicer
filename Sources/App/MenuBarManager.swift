@@ -14,7 +14,7 @@ final class MenuBarManager: NSObject {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let btn = statusItem.button {
             let img = NSImage(systemSymbolName: "clock.badge.exclamationmark",
-                              accessibilityDescription: "Magicer") ?? NSImage(systemSymbolName: "clock", accessibilityDescription: "Magicer")
+                              accessibilityDescription: "ONE") ?? NSImage(systemSymbolName: "clock", accessibilityDescription: "ONE")
             img?.isTemplate = true
             btn.image = img
             // Also respond to direct left-click to open settings
@@ -39,7 +39,7 @@ final class MenuBarManager: NSObject {
 
     private func buildContextMenu() -> NSMenu {
         let menu = NSMenu()
-        let titleItem = NSMenuItem(title: "Magicer — 工作提醒", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "ONE — 工作提醒", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
         menu.addItem(.separator())
@@ -57,7 +57,7 @@ final class MenuBarManager: NSObject {
         loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         menu.addItem(loginItem)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出 Magicer", action: #selector(quit), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "退出 ONE", action: #selector(quit), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         return menu
     }

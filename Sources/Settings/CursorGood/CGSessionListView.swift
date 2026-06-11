@@ -13,7 +13,7 @@ struct CGSessionListView: View {
                 sessionList
             }
         }
-        .frame(width: 220)
+        .frame(maxWidth: .infinity)
         .background(Color(NSColor.controlBackgroundColor))
     }
 
@@ -50,18 +50,24 @@ struct CGSessionListView: View {
 
         Button {
             mgr.selectedSessionId = session.id
+            mgr.markRead(sessionId: session.id)
         } label: {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {
                         Text(session.displayTitle)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 13, weight: session.hasUnread ? .bold : .medium))
                             .lineLimit(1)
                             .foregroundColor(isSelected ? .white : .primary)
                         if hasPending {
                             Circle()
                                 .fill(Color.orange)
                                 .frame(width: 7, height: 7)
+                        }
+                        if session.hasUnread && !isSelected {
+                            Circle()
+                                .fill(Color.blue)
+                                .frame(width: 8, height: 8)
                         }
                     }
                     Text(session.updatedAt, style: .relative)

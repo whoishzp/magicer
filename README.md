@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -143,7 +143,10 @@ magicer/
 │       ├── ReminderView.swift           # 定时提醒（状态+规则子 Tab）
 │       ├── StatusView.swift             # 状态卡片 + 实时倒计时
 │       ├── System/
-│       │   └── AppSettingsView.swift    # 系统设置页
+│       │   ├── AppSettingsView.swift    # 系统设置页
+│       │   ├── SkillManagerView.swift   # AI Skill 管理
+│       │   ├── SkillInstaller.swift     # Skill 导出/安装
+│       │   └── SkillContent.swift       # 嵌入式 Skill 内容
 │       ├── Rules/
 │       │   ├── RuleEditView.swift       # 规则编辑（桌面/脚本切换 + 内联面板）
 │       │   ├── DesktopTimingPanel.swift # 桌面提醒：触发方式 + 跟进/时长
@@ -304,6 +307,21 @@ git tag v1.48.0 && git push origin v1.48.0
 - 全屏覆盖进一步加固：去掉 `.transient`（该 flag 会在 Mission Control 切换时隐藏窗口），窗口层级提升至 `screenSaver + 200`
 - 新增 MCP 服务：Magicer 内嵌 HTTP server（127.0.0.1:18879），AI Agent 可通过 `cursor/magicer_mcp.py` 读写提醒规则
 - 提醒规则编辑页新增**时间冲突检测**：定点/一次提醒时间与其他规则冲突时展示橙色内联警告
+
+### v2.1.0（2026-06-11）
+
+- **MCP 改名**：MCP key 从 `user-cursor-good` 改为 `one-cursor-good`，注册时自动清理旧 key
+- **自动化安装**：App 启动自动注册 MCP 到 `~/.cursor/mcp.json` + 安装 Cursor 规则到 `~/.cursor/rules/one-cursorgood.mdc`（Agent 无需手动查找 MCP server 名称）
+- **菜单栏改名**：右键菜单文字从 "Magicer" 统一为 "ONE"
+- **微信风格消息气泡**：用户消息绿色背景、AI 消息白色背景
+- **钉钉风格输入框**：发送按钮和图片按钮放在输入框内部，默认高度加大；可拖拽调整输入框高度（80-300px，`@AppStorage` 持久化）
+- **输入框草稿管理**：切换会话时自动保存/恢复输入草稿，发送后清除
+- **智能会话切换**：窗口已打开时新消息不强制切换会话，侧栏显示蓝色未读圆点
+- **自动滚动**：新消息到达或切换会话时自动滚动到底部
+- **消息状态**：待发送消息显示"等待 AI 响应"状态；多条待发送消息合并后一次性返回给 AI
+- **聊天导出**：对话头部新增导出按钮，可将单个会话聊天记录导出为 Markdown
+- **Cmd+V 粘贴图片修复**：使用 `NSImage(pasteboard:)` 做更宽泛的图片类型检测
+- **Skill 导出修复**：Skill 内容嵌入代码中，不再依赖外部文件路径
 
 ### v2.0.1（2026-06-11）
 
