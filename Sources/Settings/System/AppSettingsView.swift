@@ -175,6 +175,9 @@ struct AppSettingsView: View {
                     // Appearance section
                     appearanceSection
 
+                    // AI Skill management section
+                    SkillManagerView()
+
                     // Off-work password section
                     GroupBox {
                         VStack(alignment: .leading, spacing: 14) {

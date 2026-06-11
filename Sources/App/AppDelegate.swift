@@ -22,12 +22,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         HotkeyManager.shared.start()
         StartupCommandRunner.run()
 
-        // CursorGood: load sessions, start MCP server, register with Cursor
+        // CursorGood: load sessions and start MCP server
+        // MCP registration is manual via Settings → Skill Manager (Round 3)
         CGSessionManager.shared.loadAll()
         let cgPortRaw = UserDefaults.standard.integer(forKey: "cursorGoodPort")
         let cgPort: UInt16 = cgPortRaw > 0 ? UInt16(cgPortRaw) : 18880
         CGMcpServer.shared.start(port: cgPort)
-        CGMcpRegister.register(port: cgPort)
 
         // Open settings window via Fe助手 hotkey or CursorGood notification
         for name in [Notification.Name.openFeHelperPanel, .openCursorGoodPanel] {
