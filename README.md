@@ -1,13 +1,13 @@
-# Magicer
+# ONE
 
-> 工作中断提醒 + 开发者工具箱 — macOS App
+> AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-1.84.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-1.85.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Magicer 是一个轻量的 macOS 应用，同时提供**定时提醒**和**前端开发工具**两大核心功能模块，应用在 Dock 和 Menu Bar 中均常驻。
+ONE 是一个面向 AI 原生用户的个人效率助理，提供**定时提醒**、**AI 反馈（CursorGood）**和**前端开发工具**功能模块，应用在 Dock 和 Menu Bar 中均常驻。
 
 ## 截图
 
@@ -304,6 +304,12 @@ git tag v1.48.0 && git push origin v1.48.0
 - 全屏覆盖进一步加固：去掉 `.transient`（该 flag 会在 Mission Control 切换时隐藏窗口），窗口层级提升至 `screenSaver + 200`
 - 新增 MCP 服务：Magicer 内嵌 HTTP server（127.0.0.1:18879），AI Agent 可通过 `cursor/magicer_mcp.py` 读写提醒规则
 - 提醒规则编辑页新增**时间冲突检测**：定点/一次提醒时间与其他规则冲突时展示橙色内联警告
+
+### v1.85.0（2026-06-11）
+
+- **品牌升级**：App 名称从 Magicer 改为 **ONE**，图标更新为蓝紫渐变 ONE 字样，安装包名同步改为 `ONE-x.x.x.dmg`
+- **模块排序**：左侧模块列表支持拖拽自由排序（「系统设置」固定在底部），顺序持久化
+- **Skill 文档**：建立 `cursor/skills/` 目录，完整补全定时提醒模块 API 文档（含新字段 `closeButtonText`、`enterPressThreshold`）；CursorGood 模块占位文档已创建
 
 ### v1.84.0（2026-06-11）
 

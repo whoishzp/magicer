@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP_DISPLAY="Magicer"
+APP_DISPLAY="ONE"
 BINARY_NAME="WorkStop"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 DMG_NAME="${APP_DISPLAY}-${VERSION}.dmg"
@@ -42,7 +42,7 @@ rm -f "${DIST_DIR}"/*.dmg
 cp "${DMG_NAME}" "${DIST_DIR}/${DMG_NAME}"
 
 echo "▶ Copying to Desktop..."
-rm -f ~/Desktop/Magicer-*.dmg ~/Desktop/WorkStop-*.dmg
+rm -f ~/Desktop/ONE-*.dmg ~/Desktop/Magicer-*.dmg ~/Desktop/WorkStop-*.dmg
 cp "${DMG_NAME}" ~/Desktop/
 
 echo ""
