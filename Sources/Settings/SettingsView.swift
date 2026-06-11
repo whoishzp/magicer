@@ -10,22 +10,26 @@ struct SettingsView: View {
 
     private let feHelperPublisher = NotificationCenter.default
         .publisher(for: .openFeHelperPanel)
+    private let cursorGoodPublisher = NotificationCenter.default
+        .publisher(for: .openCursorGoodPanel)
 
     enum Tab: String, CaseIterable, Equatable {
-        case reminder    = "定时提醒"
-        case feHelper    = "Fe助手"
-        case appSettings = "系统设置"
+        case reminder     = "定时提醒"
+        case cursorGood   = "CursorGood"
+        case feHelper     = "Fe助手"
+        case appSettings  = "系统设置"
 
         var icon: String {
             switch self {
             case .reminder:    return "bell.badge.fill"
+            case .cursorGood:  return "bubble.left.and.bubble.right.fill"
             case .feHelper:    return "wrench.and.screwdriver.fill"
             case .appSettings: return "gearshape.2.fill"
             }
         }
 
         /// Tabs that can be reordered (System Settings is always pinned to bottom)
-        static var orderable: [Tab] { [.reminder, .feHelper] }
+        static var orderable: [Tab] { [.reminder, .cursorGood, .feHelper] }
     }
 
     // MARK: - Tab order persistence
@@ -63,6 +67,9 @@ struct SettingsView: View {
         }
         .onReceive(feHelperPublisher) { _ in
             withAnimation(.easeInOut(duration: 0.15)) { selectedTab = .feHelper }
+        }
+        .onReceive(cursorGoodPublisher) { _ in
+            withAnimation(.easeInOut(duration: 0.15)) { selectedTab = .cursorGood }
         }
     }
 
@@ -162,6 +169,7 @@ struct SettingsView: View {
         switch selectedTab {
         case .appSettings: AppSettingsView(embedded: true)
         case .reminder:    ReminderView()
+        case .cursorGood:  CGMainView()
         case .feHelper:    FeHelperView()
         }
     }

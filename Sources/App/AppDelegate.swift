@@ -21,12 +21,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ReminderHTTPServer.shared.start()
         HotkeyManager.shared.start()
         StartupCommandRunner.run()
-        // Open Fe助手 panel via global hotkey: bring window first, then switch tab
-        NotificationCenter.default.addObserver(
-            forName: .openFeHelperPanel, object: nil, queue: .main
-        ) { [weak self] notification in
-            self?.openSettings()
-            // SettingsView will also receive this notification and switch the tab
+
+        // CursorGood: load sessions, start MCP server, register with Cursor
+        CGSessionManager.shared.loadAll()
+        let cgPortRaw = UserDefaults.standard.integer(forKey: "cursorGoodPort")
+        let cgPort: UInt16 = cgPortRaw > 0 ? UInt16(cgPortRaw) : 18880
+        CGMcpServer.shared.start(port: cgPort)
+        CGMcpRegister.register(port: cgPort)
+
+        // Open settings window via Fe助手 hotkey or CursorGood notification
+        for name in [Notification.Name.openFeHelperPanel, .openCursorGoodPanel] {
+            NotificationCenter.default.addObserver(
+                forName: name, object: nil, queue: .main
+            ) { [weak self] _ in
+                self?.openSettings()
+            }
         }
         openSettings()
     }
@@ -52,7 +61,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenu = NSMenu()
         appItem.submenu = appMenu
         let quitItem = NSMenuItem(
-            title: "退出 Magicer",
+            title: "退出 ONE",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: ""   // no key equivalent — Cmd+Q handled via local monitor
         )
@@ -126,7 +135,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false
         )
-        window.title = "Magicer"
+        window.title = "ONE"
         window.collectionBehavior = [.fullScreenPrimary]
         window.toolbarStyle = .unifiedCompact
         window.contentView = NSHostingView(rootView: SettingsView())
@@ -139,7 +148,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(
             forName: NSWindow.didUpdateNotification, object: window, queue: .main
         ) { [weak window] _ in
-            if window?.title != "Magicer" { window?.title = "Magicer" }
+            if window?.title != "ONE" { window?.title = "ONE" }
         }
     }
 }
