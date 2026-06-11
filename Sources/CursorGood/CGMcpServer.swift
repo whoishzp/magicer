@@ -248,8 +248,10 @@ final class CGMcpServer {
 
     private func sendSSEEvent(conn: NWConnection, data: String, isLast: Bool) {
         let payload = "data: \(data)\n\n"
-        conn.send(content: payload.data(using: .utf8), completion: .idempotent)
-        if isLast { conn.cancel() }
+        let completion: NWConnection.SendCompletion = isLast
+            ? .contentProcessed { _ in conn.cancel() }
+            : .idempotent
+        conn.send(content: payload.data(using: .utf8), completion: completion)
     }
 
     private func send(conn: NWConnection, status: Int, headers: [String: String], body: String) {
