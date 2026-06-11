@@ -59,6 +59,7 @@ struct CGSession: Codable, Identifiable, Equatable {
 
 struct CGPendingCall {
     let callId: String
+    let sessionId: String   // used to route user replies to the correct pending call
     let continuation: CheckedContinuation<CGFeedbackResult, Never>
 }
 

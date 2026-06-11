@@ -46,11 +46,19 @@ final class CGMcpServer {
         receiveHTTPRequest(conn: conn)
     }
 
-    private func receiveHTTPRequest(conn: NWConnection) {
-        conn.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
-            guard let self = self, let data = data, !data.isEmpty else { return }
-            let raw = String(data: data, encoding: .utf8) ?? ""
-            self.processHTTPRequest(raw: raw, conn: conn)
+    private func receiveHTTPRequest(conn: NWConnection, accumulated: Data = Data()) {
+        conn.receive(minimumIncompleteLength: 1, maximumLength: 1 << 22) { [weak self] data, _, isComplete, error in
+            guard let self = self else { return }
+            var buffer = accumulated
+            if let data = data { buffer.append(data) }
+            // Check if we've received the full HTTP request (headers + body)
+            guard let raw = String(data: buffer, encoding: .utf8) else { return }
+            if raw.contains("\r\n\r\n") {
+                self.processHTTPRequest(raw: raw, conn: conn)
+            } else if !isComplete {
+                // Need more data
+                self.receiveHTTPRequest(conn: conn, accumulated: buffer)
+            }
         }
     }
 
@@ -200,8 +208,10 @@ final class CGMcpServer {
     }
 
     private func corsHeaders() -> [String: String] {
+        // Restrict to localhost origins to prevent cross-site request attacks from browsers.
+        // Cursor and other local clients don't rely on CORS for MCP connections.
         [
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": "http://localhost",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, Accept"
         ]

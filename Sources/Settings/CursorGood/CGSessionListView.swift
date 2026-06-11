@@ -46,7 +46,7 @@ struct CGSessionListView: View {
     @ViewBuilder
     private func sessionRow(_ session: CGSession) -> some View {
         let isSelected = mgr.selectedSessionId == session.id
-        let hasPending = CGSessionManager.shared.hasPendingCalls && isSelected
+        let hasPending = mgr.hasPendingCall(for: session.id)
 
         Button {
             mgr.selectedSessionId = session.id

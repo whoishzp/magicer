@@ -18,31 +18,41 @@ final class CGSessionManager: ObservableObject {
 
     // MARK: - Storage
 
-    private static var storageDir: URL {
+    nonisolated private static var storageDir: URL {
         let base = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".cursor/data/one/cursorgood", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base
     }
 
-    private func storageURL(for sessionId: String) -> URL {
+    nonisolated private func storageURL(for sessionId: String) -> URL {
         CGSessionManager.storageDir
-            .appendingPathComponent("\(sessionId).json")
+            .appendingPathComponent("\(CGSessionManager.sanitizeSessionId(sessionId)).json")
+    }
+
+    /// Sanitize session_id: only allow alphanumerics, hyphen, underscore, dot to prevent path traversal.
+    nonisolated private static func sanitizeSessionId(_ id: String) -> String {
+        let safe = id.unicodeScalars.filter { CharacterSet.alphanumerics.union(.init(charactersIn: "-_.")).contains($0) }
+        let result = String(safe)
+        return result.isEmpty ? UUID().uuidString : String(result.prefix(128))
     }
 
     func loadAll() {
-        let dir = CGSessionManager.storageDir
-        guard let files = try? FileManager.default.contentsOfDirectory(
-            at: dir, includingPropertiesForKeys: nil)
-        else { return }
+        Task.detached(priority: .background) { [weak self] in
+            let dir = CGSessionManager.storageDir
+            guard let files = try? FileManager.default.contentsOfDirectory(
+                at: dir, includingPropertiesForKeys: nil)
+            else { return }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        var loaded: [CGSession] = files
-            .filter { $0.pathExtension == "json" }
-            .compactMap { try? decoder.decode(CGSession.self, from: Data(contentsOf: $0)) }
-        loaded.sort { $0.updatedAt > $1.updatedAt }
-        sessions = loaded
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            var loaded: [CGSession] = files
+                .filter { $0.pathExtension == "json" }
+                .compactMap { try? decoder.decode(CGSession.self, from: Data(contentsOf: $0)) }
+            loaded.sort { $0.updatedAt > $1.updatedAt }
+
+            await MainActor.run { self?.sessions = loaded }
+        }
     }
 
     private func save(_ session: CGSession) {
@@ -104,7 +114,7 @@ final class CGSessionManager: ObservableObject {
 
         // Await user reply
         return await withCheckedContinuation { cont in
-            let call = CGPendingCall(callId: callId, continuation: cont)
+            let call = CGPendingCall(callId: callId, sessionId: sessionId, continuation: cont)
             pendingCalls[callId] = call
         }
     }
@@ -117,8 +127,8 @@ final class CGSessionManager: ObservableObject {
         s.updatedAt = Date()
         updateSession(s)
 
-        // Resolve the oldest pending call for this session
-        if let callId = pendingCalls.keys.first(where: { _ in true }),
+        // Resolve the first pending call that belongs to this session
+        if let callId = pendingCalls.values.first(where: { $0.sessionId == sessionId })?.callId,
            let call = pendingCalls.removeValue(forKey: callId) {
             debounceTimers[sessionId]?.cancel()
             debounceTimers[sessionId] = nil
@@ -133,6 +143,14 @@ final class CGSessionManager: ObservableObject {
     // MARK: - Delete session
 
     func deleteSession(id: String) {
+        // Cancel any pending continuations to avoid Swift runtime "continuation not resumed" warnings
+        let stale = pendingCalls.filter { $0.value.sessionId == id }
+        for (callId, call) in stale {
+            call.continuation.resume(returning: CGFeedbackResult(text: "", images: []))
+            pendingCalls.removeValue(forKey: callId)
+        }
+        queuedInputs.removeValue(forKey: id)
+
         sessions.removeAll { $0.id == id }
         try? FileManager.default.removeItem(at: storageURL(for: id))
         if selectedSessionId == id { selectedSessionId = sessions.first?.id }
@@ -141,6 +159,10 @@ final class CGSessionManager: ObservableObject {
     // MARK: - Pending badge
 
     var hasPendingCalls: Bool { !pendingCalls.isEmpty }
+
+    func hasPendingCall(for sessionId: String) -> Bool {
+        pendingCalls.values.contains { $0.sessionId == sessionId }
+    }
 
     // MARK: - Window surface helper
 
