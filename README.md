@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.4.3-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.4.4-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -190,9 +190,9 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ## 最新版本
 
-### v2.4.3（2026-06-12）
+### v2.4.4（2026-06-12）
 
-- **归档区样式优化**：字号/间距对齐会话行，上方加分割线，归档内容淡化处理
+- **会话结束状态**：连接断开时消息显示"会话已结束"，归档会话时间改为固定时间戳
 
 完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 

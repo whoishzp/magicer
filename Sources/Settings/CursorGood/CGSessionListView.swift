@@ -119,9 +119,15 @@ struct CGSessionListView: View {
                                 .frame(width: 8, height: 8)
                         }
                     }
-                    Text(session.updatedAt, style: .relative)
-                        .font(.system(size: 11))
-                        .foregroundColor(isSelected ? .white.opacity(0.7) : .secondary)
+                    Group {
+                        if session.isArchived {
+                            Text(session.updatedAt, format: .dateTime.month().day().hour().minute())
+                        } else {
+                            Text(session.updatedAt, style: .relative)
+                        }
+                    }
+                    .font(.system(size: 11))
+                    .foregroundColor(isSelected ? .white.opacity(0.7) : .secondary)
                 }
                 Spacer()
                 if !session.isArchived {

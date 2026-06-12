@@ -3,6 +3,12 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.4] - 2026-06-12
+
+### Changed
+- **会话结束状态优化**：连接断开（无 pending call）时，消息标记从"等待 AI 响应"改为"会话已结束"（灰色）；归档会话顶部横幅显示"会话已结束"
+- **归档时间戳**：归档会话时间从相对时间（跳动）改为固定时间戳（如 `6月12日 15:23`）
+
 ## [2.4.3] - 2026-06-12
 
 ### Changed

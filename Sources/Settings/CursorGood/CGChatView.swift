@@ -30,7 +30,11 @@ struct CGChatView: View {
                         chatHeader(session)
                         Divider()
                         if hasPendingMessages(session) && !mgr.hasPendingCall(for: session.id) {
-                            pendingBanner
+                            if session.isArchived {
+                                sessionEndedBanner
+                            } else {
+                                pendingBanner
+                            }
                         }
                         messageList(session)
                         Divider()
@@ -122,6 +126,21 @@ struct CGChatView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
         .background(Color.orange.opacity(0.08))
+    }
+
+    private var sessionEndedBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.secondary)
+                .font(.system(size: 11))
+            Text("会话已结束")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(Color.secondary.opacity(0.06))
     }
 
     // MARK: - Message list
@@ -246,12 +265,21 @@ struct CGChatView: View {
                 }
                 HStack(spacing: 4) {
                     if msg.deliveryStatus == .pending {
-                        Image(systemName: "clock")
-                            .font(.system(size: 9))
-                            .foregroundColor(.orange)
-                        Text("等待 AI 响应")
-                            .font(.system(size: 10))
-                            .foregroundColor(.orange)
+                        if let s = session, !mgr.hasPendingCall(for: s.id) {
+                            Image(systemName: "xmark.circle")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                            Text("会话已结束")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        } else {
+                            Image(systemName: "clock")
+                                .font(.system(size: 9))
+                                .foregroundColor(.orange)
+                            Text("等待 AI 响应")
+                                .font(.system(size: 10))
+                                .foregroundColor(.orange)
+                        }
                     }
                     Text(msg.timestamp, style: .time)
                         .font(.system(size: 10))
