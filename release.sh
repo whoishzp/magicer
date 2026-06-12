@@ -75,7 +75,7 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
 安装方式：下载 \`${DMG_NAME}\`，将 \`${APP_DISPLAY}.app\` 拖入 \`/Applications\` 即可。" \
     --latest
   echo "✅ GitHub Release v${VERSION} 已创建"
-  echo "   https://github.com/whoishzp/magicer/releases/tag/v${VERSION}"
+  echo "   https://github.com/whoishzp/one/releases/tag/v${VERSION}"
 else
   echo "⚠️  跳过 GitHub Release（gh CLI 未登录）"
   echo "   运行 'gh auth login' 后，执行以下命令手动创建 Release："

@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-2.2.1-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -67,14 +67,14 @@ ONE 是一个面向 AI 原生用户的个人效率助理，提供**定时提醒*
 
 ### 方式一：下载安装包（推荐）
 
-1. 前往 [Releases](https://github.com/whoishzp/magicer/releases) 下载最新 `.dmg`
+1. 前往 [Releases](https://github.com/whoishzp/one/releases) 下载最新 `.dmg`
 2. 打开 DMG，将 `ONE.app` 拖入 `Applications` 文件夹
 3. 首次运行时在「系统设置 → 安全性 → 仍然打开」允许
 
 ### 方式二：从源码构建
 
 ```bash
-git clone git@github.com:whoishzp/magicer.git
+git clone git@github.com:whoishzp/one.git
 cd magicer
 ./build.sh
 open ONE.app
