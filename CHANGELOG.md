@@ -3,6 +3,11 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.5] - 2026-06-12
+
+### Fixed
+- **窗口尺寸稳定**：切换标签页或关闭会话不再导致窗口缩放；首次打开默认宽 75% 屏幕 × 高黄金比例，居中显示
+
 ## [2.4.4] - 2026-06-12
 
 ### Changed

@@ -54,7 +54,7 @@ struct SettingsView: View {
             Divider()
             content
         }
-        .frame(minWidth: 780, minHeight: 500)
+        .frame(minWidth: 780, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

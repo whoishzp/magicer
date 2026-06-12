@@ -176,16 +176,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        let screenFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let w = round(screenFrame.width * 0.75)
+        let h = round(w / 1.618)
+        let x = screenFrame.origin.x + round((screenFrame.width - w) / 2)
+        let y = screenFrame.origin.y + round((screenFrame.height - h) / 2)
+
         let window = HideOnCloseWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 860, height: 560),
+            contentRect: NSRect(x: x, y: y, width: w, height: h),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false
         )
         window.title = "ONE"
         window.collectionBehavior = [.fullScreenPrimary]
         window.toolbarStyle = .unifiedCompact
-        window.contentView = NSHostingView(rootView: SettingsView())
-        window.center()
+        window.contentMinSize = NSSize(width: 780, height: 500)
+        let hostingView = NSHostingView(rootView: SettingsView())
+        hostingView.autoresizingMask = [.width, .height]
+        window.contentView = hostingView
         window.setFrameAutosaveName("ONESettings")
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
