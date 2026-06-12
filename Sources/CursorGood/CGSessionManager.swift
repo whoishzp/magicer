@@ -198,6 +198,23 @@ final class CGSessionManager: ObservableObject {
         NSLog("[ONE] Cancelled pending call \(callId) (client disconnected)")
     }
 
+    // MARK: - End session (cancel pending + archive)
+
+    func endSession(id: String) {
+        let stale = pendingCalls.filter { $0.value.sessionId == id }
+        for (callId, call) in stale {
+            call.continuation.resume(returning: CGFeedbackResult(text: "", images: []))
+            pendingCalls.removeValue(forKey: callId)
+        }
+        queuedInputs.removeValue(forKey: id)
+
+        if let idx = sessions.firstIndex(where: { $0.id == id }) {
+            sessions[idx].isArchived = true
+            save(sessions[idx])
+        }
+        if selectedSessionId == id { selectedSessionId = sessions.first(where: { !$0.isArchived })?.id }
+    }
+
     // MARK: - Delete session
 
     func deleteSession(id: String) {

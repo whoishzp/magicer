@@ -3,6 +3,12 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.2] - 2026-06-12
+
+### Added
+- **会话结束按钮**：每个活跃会话行右侧显示 `stop.circle` 图标，点击后取消 pending MCP 调用并立即归档；右键菜单也有"结束会话"选项
+- **`CGSession.isArchived`**：新增持久化字段，支持手动归档，旧数据自动兼容
+
 ## [2.4.1] - 2026-06-12
 
 ### Fixed

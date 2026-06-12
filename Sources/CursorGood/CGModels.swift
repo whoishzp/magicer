@@ -54,6 +54,8 @@ struct CGSession: Codable, Identifiable, Equatable {
     var messages: [CGMessage]
     /// Transient: true when new AI messages arrived while user was viewing another session.
     var hasUnread: Bool = false
+    /// Manually archived by user via "End" button.
+    var isArchived: Bool = false
 
     init(id: String, topic: String = "", createdAt: Date = Date()) {
         self.id        = id
@@ -68,7 +70,17 @@ struct CGSession: Codable, Identifiable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, topic, createdAt, updatedAt, messages
+        case id, topic, createdAt, updatedAt, messages, isArchived
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id         = try c.decode(String.self, forKey: .id)
+        topic      = try c.decode(String.self, forKey: .topic)
+        createdAt  = try c.decode(Date.self, forKey: .createdAt)
+        updatedAt  = try c.decode(Date.self, forKey: .updatedAt)
+        messages   = try c.decode([CGMessage].self, forKey: .messages)
+        isArchived = try c.decodeIfPresent(Bool.self, forKey: .isArchived) ?? false
     }
 }
 

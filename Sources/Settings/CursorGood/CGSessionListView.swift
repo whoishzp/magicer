@@ -7,10 +7,10 @@ struct CGSessionListView: View {
     private static let archiveThreshold: TimeInterval = 24 * 3600
 
     private var activeSessions: [CGSession] {
-        mgr.sessions.filter { Date().timeIntervalSince($0.updatedAt) < Self.archiveThreshold }
+        mgr.sessions.filter { !$0.isArchived && Date().timeIntervalSince($0.updatedAt) < Self.archiveThreshold }
     }
     private var archivedSessions: [CGSession] {
-        mgr.sessions.filter { Date().timeIntervalSince($0.updatedAt) >= Self.archiveThreshold }
+        mgr.sessions.filter { $0.isArchived || Date().timeIntervalSince($0.updatedAt) >= Self.archiveThreshold }
     }
 
     var body: some View {
@@ -120,6 +120,9 @@ struct CGSessionListView: View {
                         .foregroundColor(isSelected ? .white.opacity(0.7) : .secondary)
                 }
                 Spacer()
+                if !session.isArchived {
+                    SessionEndButton(sessionId: session.id, isSelected: isSelected)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -127,6 +130,13 @@ struct CGSessionListView: View {
         .buttonStyle(GlassTabButtonStyle(isSelected: isSelected, cornerRadius: 6))
         .padding(.horizontal, 6)
         .contextMenu {
+            if !session.isArchived {
+                Button {
+                    mgr.endSession(id: session.id)
+                } label: {
+                    Label("结束会话", systemImage: "stop.circle")
+                }
+            }
             Button("删除会话", role: .destructive) {
                 mgr.deleteSession(id: session.id)
             }
@@ -151,5 +161,24 @@ struct CGSessionListView: View {
             Spacer()
         }
         .padding()
+    }
+}
+
+// MARK: - Session end button (hover to reveal)
+
+private struct SessionEndButton: View {
+    let sessionId: String
+    let isSelected: Bool
+    @State private var isHovering = false
+
+    var body: some View {
+        Image(systemName: "stop.circle")
+            .font(.system(size: 13))
+            .foregroundColor(isSelected ? .white.opacity(isHovering ? 1 : 0.5) : .secondary.opacity(isHovering ? 1 : 0.4))
+            .onHover { isHovering = $0 }
+            .onTapGesture {
+                CGSessionManager.shared.endSession(id: sessionId)
+            }
+            .help("结束并归档会话")
     }
 }
