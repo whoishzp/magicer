@@ -3,6 +3,11 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.3] - 2026-06-12
+
+### Changed
+- **归档区样式优化**：标题字号 11→12pt semibold，chevron 9→10pt，padding 对齐会话行，上方加 Divider 分割线，归档内会话 opacity 0.7 淡化
+
 ## [2.4.2] - 2026-06-12
 
 ### Added

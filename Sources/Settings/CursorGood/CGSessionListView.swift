@@ -61,31 +61,35 @@ struct CGSessionListView: View {
 
     private var archiveSection: some View {
         VStack(spacing: 2) {
+            Divider()
+                .padding(.horizontal, 14)
+                .padding(.top, 6)
+
             Button {
                 withAnimation(.easeInOut(duration: 0.15)) { archiveExpanded.toggle() }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: archiveExpanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.secondary)
                         .frame(width: 12)
                     Text("归档 (\(archivedSessions.count))")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.secondary)
                     Spacer()
                 }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
             }
             .buttonStyle(.plain)
 
             if archiveExpanded {
                 ForEach(archivedSessions) { session in
                     sessionRow(session)
+                        .opacity(0.7)
                 }
             }
         }
-        .padding(.top, 4)
     }
 
     @ViewBuilder
