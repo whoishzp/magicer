@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.4.5-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.4.6-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -190,9 +190,9 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ## 最新版本
 
-### v2.4.5（2026-06-12）
+### v2.4.6（2026-06-12）
 
-- **窗口尺寸优化**：首次打开宽 75% 屏幕 × 高黄金比例居中，切换标签不再缩放窗口
+- **CursorGood 空状态**：无会话时显示单一居中空状态，不再显示两栏空面板
 
 完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 

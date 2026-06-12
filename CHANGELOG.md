@@ -3,6 +3,11 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.6] - 2026-06-12
+
+### Fixed
+- **CursorGood 空状态布局**：无会话时不再渲染 HSplitView 双栏空面板，改为单一居中空状态提示
+
 ## [2.4.5] - 2026-06-12
 
 ### Fixed
