@@ -31,6 +31,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         CGMcpRegister.register(port: cgPort)
         CGRuleInstaller.installIfNeeded(port: cgPort)
 
+        // Start auto-sync if configured
+        GitHubSyncManager.shared.startAutoSync()
+
         // Open settings window via Fe助手 hotkey or CursorGood notification
         for name in [Notification.Name.openFeHelperPanel, .openCursorGoodPanel] {
             NotificationCenter.default.addObserver(

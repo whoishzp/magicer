@@ -19,15 +19,33 @@ final class CGSessionManager: ObservableObject {
 
     // MARK: - Storage
 
+    nonisolated private static let storageSubdir = "cursorgood"
+
     nonisolated private static var storageDir: URL {
-        let base = FileManager.default.homeDirectoryForCurrentUser
+        let dir = ONEDataStore.shared.subdirectory(storageSubdir)
+        // Also check old location for migration
+        let oldDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".cursor/data/one/cursorgood", isDirectory: true)
-        try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        return base
+        if FileManager.default.fileExists(atPath: oldDir.path) {
+            migrateOldSessions(from: oldDir, to: dir)
+        }
+        return dir
+    }
+
+    nonisolated private static func migrateOldSessions(from oldDir: URL, to newDir: URL) {
+        let fm = FileManager.default
+        guard let files = try? fm.contentsOfDirectory(at: oldDir, includingPropertiesForKeys: nil) else { return }
+        for file in files where file.pathExtension == "json" {
+            let dest = newDir.appendingPathComponent(file.lastPathComponent)
+            if !fm.fileExists(atPath: dest.path) {
+                try? fm.copyItem(at: file, to: dest)
+            }
+        }
+        try? fm.removeItem(at: oldDir)
     }
 
     nonisolated private func storageURL(for sessionId: String) -> URL {
-        CGSessionManager.storageDir
+        ONEDataStore.shared.subdirectory(CGSessionManager.storageSubdir)
             .appendingPathComponent("\(CGSessionManager.sanitizeSessionId(sessionId)).json")
     }
 
@@ -40,7 +58,7 @@ final class CGSessionManager: ObservableObject {
 
     func loadAll() {
         Task.detached(priority: .background) { [weak self] in
-            let dir = CGSessionManager.storageDir
+            let dir = ONEDataStore.shared.subdirectory(CGSessionManager.storageSubdir)
             guard let files = try? FileManager.default.contentsOfDirectory(
                 at: dir, includingPropertiesForKeys: nil)
             else { return }

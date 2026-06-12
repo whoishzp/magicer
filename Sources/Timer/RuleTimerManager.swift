@@ -5,8 +5,7 @@ class RuleTimerManager {
 
     private var timers: [UUID: Timer] = [:]
 
-    // UserDefaults key prefix for persisting last fire time per rule
-    private static let lastFireKeyPrefix = "one_last_fire_"
+    private static let timerFile = "timer-state.json"
 
     private init() {}
 
@@ -41,21 +40,19 @@ class RuleTimerManager {
 
     // MARK: - Interval Mode
 
-    private func lastFireKey(for rule: ReminderRule) -> String {
-        "\(RuleTimerManager.lastFireKeyPrefix)\(rule.id.uuidString)"
-    }
-
     private func saveLastFire(for rule: ReminderRule) {
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastFireKey(for: rule))
+        ONEDataStore.shared.saveDouble(
+            Date().timeIntervalSince1970,
+            forKey: rule.id.uuidString,
+            in: Self.timerFile
+        )
     }
 
     private func scheduleInterval(rule: ReminderRule) {
         let interval = TimeInterval(max(1, rule.intervalMinutes) * 60)
 
-        // Calculate how long until the NEXT fire, accounting for time elapsed since last fire
-        let key = lastFireKey(for: rule)
         let now = Date().timeIntervalSince1970
-        let lastFire = UserDefaults.standard.double(forKey: key) // 0 if never saved
+        let lastFire = ONEDataStore.shared.loadDouble(forKey: rule.id.uuidString, from: Self.timerFile)
         let elapsed = lastFire > 0 ? now - lastFire : 0  // no history → fresh start, wait full interval
         let remaining = max(1, interval - elapsed)
 

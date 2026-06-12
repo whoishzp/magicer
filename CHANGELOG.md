@@ -3,6 +3,16 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.0] - 2026-06-12
+
+### Added
+- **GitHub 同步**：系统设置新增 GitHub 同步模块，支持配置仓库地址、自动定时同步上传（默认 60 秒）、手动一键上传、从 GitHub 恢复（二次确认）、SSH Key 检测
+- **统一数据存储**：所有配置数据迁移至 `~/.one/data/` 集中管理（`ONEDataStore`），新模块强制使用此目录，为 GitHub 同步提供基础
+- **会话归档**：CursorGood 会话列表自动归档超过 24 小时未更新的会话，归档区默认折叠
+
+### Changed
+- **存储架构**：RulesStore、AppSettings、UIState、RuleTimerManager、StartupCommandRunner、CGSessionManager 全部从 UserDefaults 迁移到文件存储，首次启动自动迁移旧数据
+
 ## [2.3.0] - 2026-06-12
 
 ### Added

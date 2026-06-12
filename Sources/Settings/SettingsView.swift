@@ -4,10 +4,9 @@ struct SettingsView: View {
     @State private var selectedTab: Tab = .reminder
     @ObservedObject private var offWork = OffWorkState.shared
 
-    // Orderable tabs (excludes appSettings which is always at bottom)
+    @ObservedObject private var uiState = UIStateStore.shared
     @State private var tabOrder: [Tab] = SettingsView.loadTabOrder()
     @State private var draggingTab: Tab? = nil
-    @AppStorage("one_sidebar_collapsed") private var sidebarCollapsed: Bool = false
 
     private let feHelperPublisher = NotificationCenter.default
         .publisher(for: .openFeHelperPanel)
@@ -35,20 +34,16 @@ struct SettingsView: View {
 
     // MARK: - Tab order persistence
 
-    private static let orderKey = "one_module_order_v1"
-
     private static func loadTabOrder() -> [Tab] {
-        guard let raw = UserDefaults.standard.array(forKey: orderKey) as? [String] else {
-            return Tab.orderable
-        }
+        let raw = UIStateStore.shared.moduleOrder
+        guard !raw.isEmpty else { return Tab.orderable }
         let loaded = raw.compactMap { Tab(rawValue: $0) }.filter { $0 != .appSettings }
-        // Ensure all orderable tabs present (in case new tabs are added in future versions)
         let missing = Tab.orderable.filter { !loaded.contains($0) }
         return loaded + missing
     }
 
     private func saveTabOrder() {
-        UserDefaults.standard.set(tabOrder.map(\.rawValue), forKey: SettingsView.orderKey)
+        uiState.moduleOrder = tabOrder.map(\.rawValue)
     }
 
     // MARK: - Body
@@ -76,6 +71,7 @@ struct SettingsView: View {
 
     // MARK: - Left Sidebar
 
+    private var sidebarCollapsed: Bool { uiState.sidebarCollapsed }
     private var sidebarWidth: CGFloat { sidebarCollapsed ? 52 : 168 }
 
     private var sidebar: some View {
@@ -116,7 +112,7 @@ struct SettingsView: View {
 
     private var sidebarCollapseButton: some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) { sidebarCollapsed.toggle() }
+            withAnimation(.easeInOut(duration: 0.2)) { uiState.sidebarCollapsed.toggle() }
         } label: {
             Image(systemName: sidebarCollapsed ? "sidebar.left" : "sidebar.left")
                 .font(.system(size: 12, weight: .medium))

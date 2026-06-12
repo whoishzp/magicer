@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -46,6 +46,7 @@ ONE 是一个面向 AI 原生用户的个人效率助理，提供**定时提醒*
 - **下班密码**：可设置/修改/清除密码，支持纯空格及任意字符
 - **启动命令**：App 启动时自动执行配置的 Shell 命令（可配置多条，各自启用/禁用）；每条可一键复制完整 shell 到剪贴板（复制后柔和提示，成功约 3 秒 / 失败约 5 秒）、一键立即执行；手动执行结束后显示柔和提示条（约 6 秒后淡出，含退出码或错误摘要）
 - **下班快捷键**：自定义全局键盘快捷键（需含修饰键），在任意应用中均可触发下班/取消下班
+- **GitHub 同步**：所有配置数据同步到 GitHub 仓库，支持自动定时上传、手动一键上传、从 GitHub 恢复（二次确认）、SSH Key 检测
 
 ### Fe 助手（开发者工具）
 
@@ -189,12 +190,11 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ## 最新版本
 
-### v2.3.0（2026-06-12）
+### v2.4.0（2026-06-12）
 
-- **醒目元素配置**：蒙层醒目元素可选「时间」或「提示文字」
-- **侧栏折叠**：图标+文字 ↔ 纯图标模式
-- **屏幕拔除修复**：扩展屏断开时蒙层自动重建
-- **图片预览**：聊天图片点击放大查看
+- **GitHub 同步**：配置 + 数据同步到 GitHub 仓库，支持多设备共享
+- **统一数据存储**：所有数据集中 `~/.one/data/`，新模块自动纳入同步
+- **会话归档**：24h 未更新的会话自动归档，列表更清爽
 
 完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 

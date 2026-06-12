@@ -26,80 +26,66 @@ enum AppearanceMode: String, CaseIterable, Codable {
     }
 }
 
+/// Codable container for app settings persisted via ONEDataStore.
+private struct AppSettingsData: Codable {
+    var offWorkPassword: String = ""
+    var startupCommands: [StartupCommand] = []
+    var offWorkShortcut: OffWorkShortcut?
+    var feHelperShortcut: OffWorkShortcut?
+    var appearanceMode: String = "system"
+}
+
 /// App-level settings (password, startup commands, etc.)
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
+    private static let filename = "settings.json"
 
-    private let kPassword        = "one_offwork_password"
-    private let kStartupCmds    = "one_startup_commands"
-    private let kShortcut        = "one_offwork_shortcut"
-    private let kFeHelperShortcut = "one_fehelper_shortcut"
-    private let kAppearanceMode  = "one_appearance_mode"
-
-    @Published var offWorkPassword: String {
-        didSet { UserDefaults.standard.set(offWorkPassword, forKey: kPassword) }
-    }
-
-    @Published var startupCommands: [StartupCommand] {
-        didSet {
-            if let data = try? JSONEncoder().encode(startupCommands) {
-                UserDefaults.standard.set(data, forKey: kStartupCmds)
-            }
-        }
-    }
-
-    @Published var offWorkShortcut: OffWorkShortcut? {
-        didSet {
-            if let s = offWorkShortcut, let data = try? JSONEncoder().encode(s) {
-                UserDefaults.standard.set(data, forKey: kShortcut)
-            } else {
-                UserDefaults.standard.removeObject(forKey: kShortcut)
-            }
-        }
-    }
-
-    @Published var feHelperShortcut: OffWorkShortcut? {
-        didSet {
-            if let s = feHelperShortcut, let data = try? JSONEncoder().encode(s) {
-                UserDefaults.standard.set(data, forKey: kFeHelperShortcut)
-            } else {
-                UserDefaults.standard.removeObject(forKey: kFeHelperShortcut)
-            }
-        }
-    }
-
+    @Published var offWorkPassword: String { didSet { persist() } }
+    @Published var startupCommands: [StartupCommand] { didSet { persist() } }
+    @Published var offWorkShortcut: OffWorkShortcut? { didSet { persist() } }
+    @Published var feHelperShortcut: OffWorkShortcut? { didSet { persist() } }
     @Published var appearanceMode: AppearanceMode = .system {
-        didSet {
-            UserDefaults.standard.set(appearanceMode.rawValue, forKey: kAppearanceMode)
-            NSApp.appearance = appearanceMode.nsAppearance
-        }
+        didSet { persist(); NSApp.appearance = appearanceMode.nsAppearance }
+    }
+
+    private func persist() {
+        let data = AppSettingsData(
+            offWorkPassword: offWorkPassword,
+            startupCommands: startupCommands,
+            offWorkShortcut: offWorkShortcut,
+            feHelperShortcut: feHelperShortcut,
+            appearanceMode: appearanceMode.rawValue
+        )
+        ONEDataStore.shared.save(data, to: Self.filename)
     }
 
     private init() {
-        offWorkPassword = UserDefaults.standard.string(forKey: kPassword) ?? ""
-        if let data = UserDefaults.standard.data(forKey: kStartupCmds),
-           let cmds = try? JSONDecoder().decode([StartupCommand].self, from: data) {
-            startupCommands = cmds
+        if let saved = ONEDataStore.shared.load(AppSettingsData.self, from: Self.filename) {
+            offWorkPassword = saved.offWorkPassword
+            startupCommands = saved.startupCommands
+            offWorkShortcut = saved.offWorkShortcut
+            feHelperShortcut = saved.feHelperShortcut
+            appearanceMode = AppearanceMode(rawValue: saved.appearanceMode) ?? .system
         } else {
-            startupCommands = []
-        }
-        // v1.62 及更早版本曾持久化执行记录，已不再使用
-        UserDefaults.standard.removeObject(forKey: "one_startup_command_logs")
-        if let data = UserDefaults.standard.data(forKey: kShortcut),
-           let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: data) {
-            offWorkShortcut = sc
-        } else {
-            offWorkShortcut = nil
-        }
-        if let data = UserDefaults.standard.data(forKey: kFeHelperShortcut),
-           let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: data) {
-            feHelperShortcut = sc
-        } else {
-            feHelperShortcut = nil
-        }
-        if let raw = UserDefaults.standard.string(forKey: kAppearanceMode),
-           let mode = AppearanceMode(rawValue: raw) {
-            appearanceMode = mode
+            // Fallback: migrate from UserDefaults
+            offWorkPassword = UserDefaults.standard.string(forKey: "one_offwork_password") ?? ""
+            if let d = UserDefaults.standard.data(forKey: "one_startup_commands"),
+               let cmds = try? JSONDecoder().decode([StartupCommand].self, from: d) {
+                startupCommands = cmds
+            } else { startupCommands = [] }
+            if let d = UserDefaults.standard.data(forKey: "one_offwork_shortcut"),
+               let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: d) {
+                offWorkShortcut = sc
+            } else { offWorkShortcut = nil }
+            if let d = UserDefaults.standard.data(forKey: "one_fehelper_shortcut"),
+               let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: d) {
+                feHelperShortcut = sc
+            } else { feHelperShortcut = nil }
+            if let raw = UserDefaults.standard.string(forKey: "one_appearance_mode"),
+               let mode = AppearanceMode(rawValue: raw) {
+                appearanceMode = mode
+            }
+            persist()
         }
         NSApp.appearance = appearanceMode.nsAppearance
     }

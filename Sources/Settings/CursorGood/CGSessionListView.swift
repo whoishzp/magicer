@@ -2,6 +2,16 @@ import SwiftUI
 
 struct CGSessionListView: View {
     @ObservedObject private var mgr = CGSessionManager.shared
+    @State private var archiveExpanded = false
+
+    private static let archiveThreshold: TimeInterval = 24 * 3600
+
+    private var activeSessions: [CGSession] {
+        mgr.sessions.filter { Date().timeIntervalSince($0.updatedAt) < Self.archiveThreshold }
+    }
+    private var archivedSessions: [CGSession] {
+        mgr.sessions.filter { Date().timeIntervalSince($0.updatedAt) >= Self.archiveThreshold }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -35,12 +45,47 @@ struct CGSessionListView: View {
     private var sessionList: some View {
         ScrollView(.vertical, showsIndicators: true) {
             LazyVStack(spacing: 2) {
-                ForEach(mgr.sessions) { session in
+                ForEach(activeSessions) { session in
                     sessionRow(session)
+                }
+
+                if !archivedSessions.isEmpty {
+                    archiveSection
                 }
             }
             .padding(.vertical, 6)
         }
+    }
+
+    // MARK: - Archive section
+
+    private var archiveSection: some View {
+        VStack(spacing: 2) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.15)) { archiveExpanded.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: archiveExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 12)
+                    Text("归档 (\(archivedSessions.count))")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
+
+            if archiveExpanded {
+                ForEach(archivedSessions) { session in
+                    sessionRow(session)
+                }
+            }
+        }
+        .padding(.top, 4)
     }
 
     @ViewBuilder

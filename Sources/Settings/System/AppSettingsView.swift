@@ -253,6 +253,9 @@ struct AppSettingsView: View {
 
                     // Boot startup commands section
                     startupCommandsSection
+
+                    // GitHub sync section
+                    GitHubSyncView()
                 }
                 .padding(20)
             }

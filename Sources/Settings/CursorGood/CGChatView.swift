@@ -9,7 +9,7 @@ struct CGChatView: View {
     @FocusState private var isInputFocused: Bool
     @State private var pasteMonitor: Any? = nil
     @State private var lastSessionId: String? = nil
-    @AppStorage("cgInputHeight") private var inputHeight: Double = 120
+    @ObservedObject private var uiState = UIStateStore.shared
     @State private var dragStartHeight: Double = 0
     @State private var previewImage: NSImage? = nil
 
@@ -256,9 +256,9 @@ struct CGChatView: View {
                 .gesture(
                     DragGesture(minimumDistance: 1)
                         .onChanged { value in
-                            if dragStartHeight == 0 { dragStartHeight = inputHeight }
+                            if dragStartHeight == 0 { dragStartHeight = uiState.cgInputHeight }
                             let newHeight = dragStartHeight - value.translation.height
-                            inputHeight = min(max(newHeight, 80), 300)
+                            uiState.cgInputHeight = min(max(newHeight, 80), 300)
                         }
                         .onEnded { _ in
                             dragStartHeight = 0
@@ -335,7 +335,7 @@ struct CGChatView: View {
                     .padding(.top, 4)
                 }
                 .padding(10)
-                .frame(height: max(inputHeight, 80))
+                .frame(height: max(uiState.cgInputHeight, 80))
                 .background(Color(NSColor.textBackgroundColor))
                 .cornerRadius(8)
                 .overlay(

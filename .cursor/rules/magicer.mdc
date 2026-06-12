@@ -58,7 +58,8 @@ echo "x.y.z" > VERSION
 ## 技术栈约束
 
 - SwiftUI + AppKit 混合（UI 用 SwiftUI，系统集成用 AppKit）
-- 数据持久化：`UserDefaults`（Codable 序列化）
+- 数据持久化：`ONEDataStore`（`~/.one/data/` 目录，JSON 文件）
+- **禁止使用 UserDefaults 存储业务数据**：所有新模块必须通过 `ONEDataStore.shared` 读写数据，数据目录会被 GitHub Sync 自动同步
 - 无第三方依赖（纯 Swift Package）
 - 最低支持 macOS 13.0
 

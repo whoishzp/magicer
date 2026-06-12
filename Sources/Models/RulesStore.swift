@@ -11,21 +11,22 @@ class RulesStore: ObservableObject {
         }
     }
 
-    private let key = "one_rules_v1"
+    private static let filename = "rules.json"
 
     private init() {
-        if let data = UserDefaults.standard.data(forKey: key),
-           let decoded = try? JSONDecoder().decode([ReminderRule].self, from: data) {
+        if let loaded = ONEDataStore.shared.load([ReminderRule].self, from: Self.filename) {
+            rules = loaded
+        } else if let data = UserDefaults.standard.data(forKey: "one_rules_v1"),
+                  let decoded = try? JSONDecoder().decode([ReminderRule].self, from: data) {
             rules = decoded
+            ONEDataStore.shared.save(decoded, to: Self.filename)
         } else {
             rules = [ReminderRule(name: "专注提醒")]
         }
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(rules) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
+        ONEDataStore.shared.save(rules, to: Self.filename)
         ReminderSkillExporter.export(rules: rules)
     }
 

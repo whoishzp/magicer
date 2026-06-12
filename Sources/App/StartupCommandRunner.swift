@@ -13,17 +13,13 @@ struct StartupCommandRunOutcome {
 /// Subsequent app relaunches within the same boot session are silently skipped.
 enum StartupCommandRunner {
 
-    private static let kLastRunKey = "one_startup_last_run"
-
-    /// System boot time derived from process uptime.
     private static var bootTime: Date {
         Date().addingTimeInterval(-ProcessInfo.processInfo.systemUptime)
     }
 
-    /// Returns true only if we haven't run commands since the last machine boot.
     private static var shouldRunThisBoot: Bool {
-        let lastRun = UserDefaults.standard.double(forKey: kLastRunKey)
-        guard lastRun > 0 else { return true }   // never ran
+        let lastRun = ONEDataStore.shared.loadDouble(forKey: "startup_last_run", from: "timer-state.json")
+        guard lastRun > 0 else { return true }
         return Date(timeIntervalSince1970: lastRun) < bootTime
     }
 
@@ -36,7 +32,7 @@ enum StartupCommandRunner {
         let commands = AppSettings.shared.startupCommands.filter { $0.isEnabled }
         guard !commands.isEmpty else { return }
 
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: kLastRunKey)
+        ONEDataStore.shared.saveDouble(Date().timeIntervalSince1970, forKey: "startup_last_run", in: "timer-state.json")
         for cmd in commands {
             execute(label: cmd.label, command: cmd.command, finished: nil)
         }
