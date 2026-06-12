@@ -9,7 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - **品牌统一**：代码/配置/日志中的 Magicer/WorkStop/ws_ 全部改为 ONE/one_
 - **Package/Binary 名称**：WorkStop → ONE
 - **Bundle ID 统一**：build.sh 与 Info.plist 均为 `com.mader.one`
-- **聊天界面**：改为钉钉风格（蓝色用户气泡 + 浅灰背景 + 白色 AI 气泡）
+- **聊天界面**：重新设计消息气泡配色（蓝色用户气泡 + 浅灰背景 + 白色 AI 气泡）
 - **暗色模式适配**：聊天界面颜色使用 NSColor dynamic provider 自动适配
 - **版本规则**：打包必升版本号，禁止两次发布使用同一版本号
 - **设计规范**：新增架构师视角设计原则和 PRD 设计规范
