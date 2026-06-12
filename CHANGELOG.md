@@ -3,6 +3,15 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.1] - 2026-06-12
+
+### Fixed
+- **MCP 断线恢复**：ONE 重启后自动从持久化会话重建待发送队列（`queuedInputs`），Cursor Agent 重试时可立即获取之前的回复
+- **未送达消息提示**：会话中存在未送达消息时显示橙色提示条
+
+### Changed
+- **CursorGood 规则升级**：自动安装的 `one-cursorgood.mdc` 现包含完整的强制规则（核心要求、输出流程、连接失败自动重试等），不再依赖 `main.mdc`
+
 ## [2.4.0] - 2026-06-12
 
 ### Added

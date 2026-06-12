@@ -70,7 +70,27 @@ final class CGSessionManager: ObservableObject {
                 .compactMap { try? decoder.decode(CGSession.self, from: Data(contentsOf: $0)) }
             loaded.sort { $0.updatedAt > $1.updatedAt }
 
-            await MainActor.run { self?.sessions = loaded }
+            // Rebuild queuedInputs from persisted .pending messages
+            // so restarted app can serve them when Cursor retries
+            var rebuilt: [String: [CGFeedbackResult]] = [:]
+            for session in loaded {
+                let pending = session.messages.filter {
+                    $0.role == .user && $0.deliveryStatus == .pending
+                }
+                if !pending.isEmpty {
+                    rebuilt[session.id] = pending.map {
+                        CGFeedbackResult(text: $0.text, images: $0.images)
+                    }
+                }
+            }
+
+            await MainActor.run {
+                self?.sessions = loaded
+                if !rebuilt.isEmpty {
+                    self?.queuedInputs = rebuilt
+                    NSLog("[ONE] Rebuilt \(rebuilt.count) queued input(s) from persisted .pending messages")
+                }
+            }
         }
     }
 

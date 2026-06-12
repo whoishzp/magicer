@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.4.1-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -190,11 +190,10 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ## 最新版本
 
-### v2.4.0（2026-06-12）
+### v2.4.1（2026-06-12）
 
-- **GitHub 同步**：配置 + 数据同步到 GitHub 仓库，支持多设备共享
-- **统一数据存储**：所有数据集中 `~/.one/data/`，新模块自动纳入同步
-- **会话归档**：24h 未更新的会话自动归档，列表更清爽
+- **MCP 断线恢复**：ONE 重启后自动重建待发送队列，Cursor Agent 重试即可恢复通信
+- **CursorGood 规则升级**：自动安装完整强制规则 + 连接失败自动重试
 
 完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 

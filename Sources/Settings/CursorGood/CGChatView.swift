@@ -29,6 +29,9 @@ struct CGChatView: View {
                     VStack(spacing: 0) {
                         chatHeader(session)
                         Divider()
+                        if hasPendingMessages(session) && !mgr.hasPendingCall(for: session.id) {
+                            pendingBanner
+                        }
                         messageList(session)
                         Divider()
                         inputArea
@@ -98,6 +101,27 @@ struct CGChatView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    // MARK: - Pending banner
+
+    private func hasPendingMessages(_ session: CGSession) -> Bool {
+        session.messages.contains { $0.role == .user && $0.deliveryStatus == .pending }
+    }
+
+    private var pendingBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
+                .font(.system(size: 11))
+            Text("有消息未送达 — 请在 Cursor 中重新触发 Agent")
+                .font(.system(size: 11))
+                .foregroundColor(.orange)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(Color.orange.opacity(0.08))
     }
 
     // MARK: - Message list
