@@ -107,7 +107,7 @@ class OffWorkManager {
     private func beginActivity() {
         activityToken = ProcessInfo.processInfo.beginActivity(
             options: [.idleSystemSleepDisabled, .idleDisplaySleepDisabled, .userInitiated],
-            reason: "Magicer 下班模式"
+            reason: "ONE 下班模式"
         )
     }
 
@@ -208,12 +208,10 @@ class OffWorkManager {
         alert.alertStyle = .informational
 
         let response = alert.runModal()
-        restoreRules()
-        if response != .alertFirstButtonReturn {
-            for i in RulesStore.shared.rules.indices {
-                RulesStore.shared.rules[i].isEnabled = false
-            }
+        if response == .alertFirstButtonReturn {
+            restoreRules()
         }
+        // "保持暂停" → do nothing; rules stay disabled from snapshotAndPauseRules()
     }
 
     private func tearDown() {

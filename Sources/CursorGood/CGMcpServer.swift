@@ -16,7 +16,8 @@ final class CGMcpServer {
         let params = NWParameters.tcp
         params.allowLocalEndpointReuse = true
 
-        guard let l = try? NWListener(using: params, on: NWEndpoint.Port(rawValue: port)!) else {
+        guard let nwPort = NWEndpoint.Port(rawValue: port),
+              let l = try? NWListener(using: params, on: nwPort) else {
             NSLog("[CGMcpServer] Failed to bind port \(port)")
             return
         }
@@ -149,8 +150,18 @@ final class CGMcpServer {
             let sessId   = args["session_id"] as? String ?? UUID().uuidString
             let sessTopic = args["session_topic"] as? String ?? ""
 
-            // Stream response via SSE to keep connection alive while waiting
             sendSSEHeaders(conn: conn)
+
+            conn.stateUpdateHandler = { [weak self] state in
+                guard let self else { return }
+                switch state {
+                case .cancelled, .failed:
+                    Task { @MainActor in
+                        CGSessionManager.shared.cancelPendingCall(callId: callId)
+                    }
+                default: break
+                }
+            }
 
             Task { @MainActor in
                 let result = await CGSessionManager.shared.promptUser(

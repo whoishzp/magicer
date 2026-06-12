@@ -159,7 +159,7 @@ struct AppSettingsView: View {
                         .foregroundColor(.secondary)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("系统设置").font(.headline)
-                        Text("Magicer 应用配置").font(.caption).foregroundColor(.secondary)
+                        Text("ONE 应用配置").font(.caption).foregroundColor(.secondary)
                     }
                     Spacer()
                     Button("完成") { dismiss() }
@@ -347,7 +347,7 @@ struct AppSettingsView: View {
                     .font(.subheadline.bold())
                     .foregroundColor(.primary)
 
-                Text("Mac 开机后首次启动 Magicer 时自动执行以下 shell 命令。同一次开机多次打开应用只执行一次，后台运行不阻塞启动。")
+                Text("Mac 开机后首次启动 ONE 时自动执行以下 shell 命令。同一次开机多次打开应用只执行一次，后台运行不阻塞启动。")
                     .font(.caption)
                     .foregroundColor(.secondary)
 

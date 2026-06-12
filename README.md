@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
+[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://github.com/whoishzp/magicer/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -18,7 +18,7 @@ ONE 是一个面向 AI 原生用户的个人效率助理，提供**定时提醒*
 ### 定时提醒
 
 - **多规则并行**：创建多条提醒规则，各自独立计时，互不干扰
-- **提醒时机双模式**：「桌面提醒」全屏蒙层；「定时脚本」按同一套时间策略执行 Shell（`/bin/sh -c`），可配置日志目录，每次执行追加写入 `magicer-<规则UUID>.log`（标准输出与标准错误、退出码）；支持一键复制命令
+- **提醒时机双模式**：「桌面提醒」全屏蒙层；「定时脚本」按同一套时间策略执行 Shell（`/bin/sh -c`），可配置日志目录，每次执行追加写入 `one-<规则UUID>.log`（标准输出与标准错误、退出码）；支持一键复制命令
 - **循环提醒**：每隔 N 分钟触发一次，重启后自动恢复剩余倒计时（本地缓存）
 - **定点提醒**：每天指定时刻触发，可配置多个时刻
 - **一次提醒**：选择指定时刻，触发一次后自动停用；关闭蒙层后还可配置「跟进提醒」在 N 分钟后再次弹出
@@ -68,7 +68,7 @@ ONE 是一个面向 AI 原生用户的个人效率助理，提供**定时提醒*
 ### 方式一：下载安装包（推荐）
 
 1. 前往 [Releases](https://github.com/whoishzp/magicer/releases) 下载最新 `.dmg`
-2. 打开 DMG，将 `Magicer.app` 拖入 `Applications` 文件夹
+2. 打开 DMG，将 `ONE.app` 拖入 `Applications` 文件夹
 3. 首次运行时在「系统设置 → 安全性 → 仍然打开」允许
 
 ### 方式二：从源码构建
@@ -77,7 +77,7 @@ ONE 是一个面向 AI 原生用户的个人效率助理，提供**定时提醒*
 git clone git@github.com:whoishzp/magicer.git
 cd magicer
 ./build.sh
-open Magicer.app
+open ONE.app
 ```
 
 ## 使用
@@ -187,242 +187,16 @@ git add -A && git commit -m "release: v1.48.0" && git push
 git tag v1.48.0 && git push origin v1.48.0
 ```
 
-## 变更日志
+## 最新版本
 
-### v1.75.0（2026-04-17）
+### v2.2.0（2026-06-12）
 
-- **UI**：侧边栏底部新增版本号显示（读取 Bundle CFBundleShortVersionString）
-- **Skill**：修正主题 ID 列表（`red-alarm` · `blue-calm` · `green-fresh` · `mono-minimal` · `gentle` · `pink` · `macaron` · `frosted`），补充 ESC 关闭、新规则计时行为说明；Claude 安装路径同步更新（已支持 Cursor + Claude 双端）
+- **品牌统一**：代码/配置/日志全量改为 ONE，Package/Binary 名改为 ONE
+- **钉钉风格聊天**：蓝色用户气泡 + 浅灰背景 + 白色 AI 气泡，暗色模式适配
+- **架构治理**：修复 MCP 断连泄漏、force unwrap、下班退出 bug、@StateObject 误用等 11 项问题
+- **UserDefaults 迁移**：升级时自动迁移旧 key 数据
 
-### v1.74.0（2026-04-17）
-
-- **JSON 美化**：重构解析策略为 5 级 fallback — ① 直接解析 ② 修复字符串内裸控制字符 ③ 展开字符串外字面量 `\n` ④ 全转义格式（`\"`+wrapping）⑤ 手动解码所有 `\x` 逃逸序列；覆盖全部常见格式变体
-
-### v1.73.0（2026-04-17）
-
-- **JSON 美化**：新增 `expandLiteralEscapesOutsideStrings` — 逐字符追踪字符串边界，只将字符串外的字面量 `\n`/`\r`/`\t` 替换为真实空白字符，字符串内的逃逸序列保持不变；兼容「真实 `"` + 字面量 `\n`」格式输入
-
-### v1.72.0（2026-04-17）
-
-- **JSON 美化**：修复转义格式解析兼容 — 引入 `reEscapeControlCharsInStringValues`，对 wrapping 解码后字符串值里的裸控制字符（如 LF）重新转义，确保含内嵌换行的字段也能正确解析
-
-### v1.71.0（2026-04-17）
-
-- **定时提醒**：全屏蒙层可关闭时支持 ESC 键快速关闭（倒计时结束或无锁定时生效）
-
-### v1.70.0（2026-04-17）
-
-- **JSON 美化**：解析失败时展示具体错误信息（含位置提示），超长错误悬停可查看完整内容
-
-### v1.69.0（2026-04-17）
-
-- **JSON 美化**：兼容 JSON 字符串转义格式输入（内容含字面量 `\n`、`\"` 等转义序列时自动反转义后再解析，无需手动处理）
-
-### v1.68.0（2026-04-17）
-
-- **定时提醒**：修复新建规则后立即弹出蒙层的问题 — 无历史触发时间的新规则现在从创建时刻开始计时，等待完整间隔后才首次触发
-
-### v1.67.0（2026-04-17）
-
-- **JSON 美化**：新增嵌套 JSON 字符串自动解析，string 类型字段若内容为合法 JSON 对象/数组，自动递归展开为可交互树节点（兼容 `callback_column` 等转义场景）
-
-### v1.66.0（2026-04-17）
-
-- **定时提醒**：「提醒时机」改为「桌面提醒 / 定时脚本」双按钮；桌面配置与脚本配置拆成独立内联面板
-- **定时脚本**：三种触发方式（循环 / 定点 / 一次）与桌面一致；多行 Shell 编辑、复制命令、选择日志目录；执行日志按规则写入目录下 `magicer-<UUID>.log`
-- **数据模型**：`ReminderRule` 新增 `actionKind`、`shellCommand`、`logDirectoryPath`；HTTP API / Skill 导出同步说明
-
-### v1.65.0（2026-04-16）
-
-- **启动命令**：复制 shell 后显示与执行反馈同风格的提示条（成功约 3 秒 / 失败约 5 秒自动消失）；失败时提示重试
-- **Cursor 规则**：`.cursor/rules/magicer.mdc` 增加「Cursor Good 强制」条款，要求在本仓库工作时遵循 `~/.cursor/rules/main.mdc` 的 CursorGood MCP 闭环
-
-### v1.64.0（2026-04-16）
-
-- **启动命令一键复制**：已配置命令行增加「文档」图标按钮，点击将完整 shell 正文写入系统剪贴板
-
-### v1.63.0（2026-04-16）
-
-- **启动命令**：移除「执行记录」列表与本地持久化，仅保留手动执行后的柔和提示条；启动时仍静默执行（失败写入系统日志）
-- 首次启动时清除遗留的 `ws_startup_command_logs` 数据
-
-### v1.62.0（2026-04-16）
-
-- **启动命令执行记录**：每次启动时与手动播放均写入日志（时间、来源「启动/手动」、标签、成功/失败、退出码或错误摘要），列表可滚动查看，支持清空
-- **手动执行反馈**：完成后在列表上方显示非模态提示条（成功绿色 / 未成功橙色），约 6 秒自动消失，并引导查看执行记录
-- `StartupCommandRunner`：`waitUntilExit` 后记录退出码；`AppSettings` 持久化 `ws_startup_command_logs`
-
-### v1.61.0（2026-04-16）
-
-- **启动命令一键执行**：系统设置「启动执行命令」列表每行增加播放按钮，点击后立即在后台执行该条 shell（与启动时逻辑一致，不阻塞界面）
-
-### v1.60.0（2026-04-15）
-
-- **Carbon 全局快捷键**：新增 `CarbonBridge` C 扩展模块，通过 `InstallApplicationEventHandler` + `RegisterEventHotKey` 实现真正无权限全局热键
-- 放弃 `NSEvent.addGlobalMonitorForEvents` + Input Monitoring 方案（macOS 15 下授权后仍不可靠）
-- `CarbonHotkeyManager` 改为纯 C 桥接调用，兼容 Swift-C 混合 SPM 多 target 编译
-- 移除系统设置「输入监控」权限提示 UI（Carbon 方案不需要任何额外权限）
-- `Package.swift` 新增 `CarbonBridge` 静态库 target，链接 Carbon.framework
-
-### v1.59.0（2026-04-15）
-
-- 全局快捷键同时注册 global+local monitor：app 在后台和前台均可触发
-- 录制模式激活时标记 `isAnyRecording`，避免录制期间误触发已配置的快捷键
-- 系统设置快捷键区块增加「输入监控」权限状态提示：无权限时显示橙色警告条 + 「前往设置」按钮
-- `HotkeyManager.start()` 启动时自动调用 `CGRequestListenEventAccess()` 申请输入监控权限
-
-### v1.58.0（2026-04-15）
-
-- 系统设置「全局快捷键」区块新增两条独立快捷键配置：「下班模式」和「Fe 助手」
-- 录制逻辑重写：使用 `NSEvent.addLocalMonitorForEvents`，点击「录制」后直接按组合键即可，Esc 取消，支持重新录制和清除
-- Fe 助手全局快捷键：在任意程序中按下后自动将设置窗口置顶并切换到 Fe 助手 Tab
-- 下班模式全局快捷键：在任意程序中按下后触发进入/退出下班黑幕（应用后台同样生效）
-- 移除 Fe 助手工具栏中误加的「下班」快捷按钮（功能已统一在系统设置 + 主窗口工具栏管理）
-
-### v1.57.0（2026-04-15）
-
-- Fe 助手工具栏新增「下班」快捷按钮，当前快捷键可见时直接显示键位
-- 系统设置新增「下班快捷键」区块：点击「录制」按下任意组合键（含修饰键）完成设置，支持清除；快捷键存入 `UserDefaults`，重启自动恢复
-- 新增 `HotkeyManager`：监听全局键盘事件，匹配快捷键后自动触发下班/取消下班（应用在后台时同样生效）
-- 新增 `OffWorkShortcut` 数据模型（`Codable`），负责快捷键序列化与展示字符串（⌘⇧D 等）
-
-### v1.56.0（2026-04-14）
-
-- 新增嵌入式 HTTP Server（`127.0.0.1:18879`）：实现完整 CRUD API（`GET /reminders`、`POST /reminders`、`PUT /reminders/{id}/toggle`、`DELETE /reminders/{id}`），AI Agent 可通过 curl 直接读写提醒规则
-- 定时提醒右上角新增「安装 Skill」按钮：一键同时写入 Cursor（`~/.cursor/skills/magicer-reminders/SKILL.md`）和 Claude（`~/.claude/CLAUDE.md` 标记块），支持重复安装（幂等更新）
-- 安装结果细分三态：全部成功 / 部分成功 / 失败，颜色区分
-
-### v1.55.0（2026-04-14）
-
-- 移除定时提醒页面「导出 Skill」按钮（Skill 文件已在规则变更时自动同步，无需手动触发）
-
-### v1.54.0（2026-04-14）
-
-- 全屏覆盖根本修复：参考 cursor-stop 三要素 — 恢复 `.transient`、改用 `orderFrontRegardless()`、弹出时临时切换激活策略为 `.accessory`（不占 Space），关闭后恢复 `.regular`
-- 下班模式同步应用以上策略
-
-### v1.53.0（2026-04-14）
-
-- 修复全屏蒙层白框：`NSTextField` label 强制 `drawsBackground = false / backgroundColor = .clear`
-- 全屏覆盖进一步加固：去掉 `.transient`（该 flag 会在 Mission Control 切换时隐藏窗口），窗口层级提升至 `screenSaver + 200`
-- 新增 MCP 服务：Magicer 内嵌 HTTP server（127.0.0.1:18879），AI Agent 可通过 `cursor/magicer_mcp.py` 读写提醒规则
-- 提醒规则编辑页新增**时间冲突检测**：定点/一次提醒时间与其他规则冲突时展示橙色内联警告
-
-### v2.1.0（2026-06-11）
-
-- **MCP 改名**：MCP key 从 `user-cursor-good` 改为 `one-cursor-good`，注册时自动清理旧 key
-- **自动化安装**：App 启动自动注册 MCP 到 `~/.cursor/mcp.json` + 安装 Cursor 规则到 `~/.cursor/rules/one-cursorgood.mdc`（Agent 无需手动查找 MCP server 名称）
-- **菜单栏改名**：右键菜单文字从 "Magicer" 统一为 "ONE"
-- **微信风格消息气泡**：用户消息绿色背景、AI 消息白色背景
-- **钉钉风格输入框**：发送按钮和图片按钮放在输入框内部，默认高度加大；可拖拽调整输入框高度（80-300px，`@AppStorage` 持久化）
-- **输入框草稿管理**：切换会话时自动保存/恢复输入草稿，发送后清除
-- **智能会话切换**：窗口已打开时新消息不强制切换会话，侧栏显示蓝色未读圆点
-- **自动滚动**：新消息到达或切换会话时自动滚动到底部
-- **消息状态**：待发送消息显示"等待 AI 响应"状态；多条待发送消息合并后一次性返回给 AI
-- **聊天导出**：对话头部新增导出按钮，可将单个会话聊天记录导出为 Markdown
-- **Cmd+V 粘贴图片修复**：使用 `NSImage(pasteboard:)` 做更宽泛的图片类型检测
-- **Skill 导出修复**：Skill 内容嵌入代码中，不再依赖外部文件路径
-
-### v2.0.1（2026-06-11）
-
-- **CursorGood 原生模块**：内置 MCP HTTP 服务（18880 端口），原生 SwiftUI 会话列表 + 对话框；AI 调用时自动弹出 ONE 并定位 session；历史会话永久保留于 `~/.cursor/data/one/cursorgood/`，支持手动删除
-- **Skill 管理（系统设置）**：外观设置下新增「AI Skill 管理」区块，支持对每个 AI 模块手动导出/安装 Skill 文档；Skill 安装不再自动执行
-- **MCP 工具名**：`CursorGood`（与 cursor-good VS Code 扩展一致，cursor-good 扩展可移除）
-
-### v1.85.0（2026-06-11）
-
-- **品牌升级**：App 名称从 Magicer 改为 **ONE**，图标更新为蓝紫渐变 ONE 字样，安装包名同步改为 `ONE-x.x.x.dmg`
-- **模块排序**：左侧模块列表支持拖拽自由排序（「系统设置」固定在底部），顺序持久化
-- **Skill 文档**：建立 `cursor/skills/` 目录，完整补全定时提醒模块 API 文档（含新字段 `closeButtonText`、`enterPressThreshold`）；CursorGood 模块占位文档已创建
-
-### v1.84.0（2026-06-11）
-
-- **回车关闭次数可配置**：每条规则新增「回车关闭次数」数值输入（1~100，默认 4），独立控制 3 秒内连按 Enter 强制显示关闭按钮所需次数
-- **数据模型**：`ReminderRule` 将 `hardLock: Bool` 替换为 `enterPressThreshold: Int`，旧规则默认 4
-
-### v1.83.0（2026-06-10）
-
-- **关闭行为分级**：「可立即关闭」改为两个互斥选项：「忽略时长，直接关闭」（等同原 canCloseImmediately）和「不可直接关闭」（Enter 后门提升至 10 次）；都不勾时为默认行为（倒计时 + 4 次回车）
-- **数据模型**：`ReminderRule` 新增 `hardLock: Bool` 字段，向下兼容（旧规则默认 `false`）
-
-### v1.82.0（2026-06-10）
-
-- **渐变 + 光晕球背景**：所有 8 个主题弹窗背景改为对角线渐变叠加彩色柔光球，参考 macOS 壁纸风格，左上大球 / 右下中球 / 右上小球三层叠加
-- **统一单一排版模板**：彻底移除各主题差异化布局，全部统一为居中层次结构（规则名 → 时间 → 日期 → 分隔线 → 提醒文字），简洁不杂乱
-- **时间拆分两行展示**：`HH:mm:ss`（大字，每秒跳动）+ `yyyy-MM-dd`（小字，静态）
-- 深色主题白色文字，浅色主题主题色文字，各主题差异化通过渐变色调体现
-- 新增 8 组 `orbColor1 / orbColor2` 高饱和度光晕颜色定义
-
-### v1.81.0（2026-06-10）
-
-- **全面重设计 8 套蒙层主题**：各主题布局重构，突出展示实时时钟（`yyyy-MM-dd HH:mm:ss`，每秒跳动），时钟作为核心视觉元素
-- **关闭按钮迁移至右下角**：由原来的居中大按钮改为右下角 ghost 风格小按钮（细边框 + 低透明度填充），hover 时轻微高亮
-- **可配置关闭按钮文案**：每条规则在「提示文字」中可自定义关闭按钮文字；留空则默认显示 OK
-- **主题预览同步**：预览面板时钟实时跳动，关闭按钮预览样式同步更新
-
-### v1.52.0（2026-04-14）
-
-- 修复历史提醒规则升级后丢失的问题（自定义 Codable decoder 向后兼容新字段）
-- 全屏蒙层覆盖扩展屏 full-screen Space：改用 `OverlayNSWindow`（重写 `canBecomeKey`）+  `makeKeyAndOrderFront` + 0.35s 延迟重试
-- JSON 美化工具重写为**树形视图**：展开/折叠节点、悬停复制节点完整子树 JSON、叶子节点文本可框选
-- 新增 `JsonTreeView.swift` 组件
-
-### v1.51.0（2026-04-14）
-
-- 定时提醒新增**一次提醒**触发方式：选定时刻触发一次后自动停用
-- 所有触发方式支持**跟进提醒**：关闭蒙层后 N 分钟补发一次（0 = 不跟进）
-- 全屏蒙层切换桌面（Space）后自动抢回焦点（`activeSpaceDidChangeNotification`）
-- 下班模式同步支持切桌面后焦点恢复
-- 面板打开时 Cmd+Q 只关闭面板，不退出应用
-- JSON 美化支持行内鼠标框选复制（`.textSelection(.enabled)`）
-
-### v1.47.0（2026-04-14）
-
-- JSON 比对面板底部加内边距，UI 美观改进
-- JSON 比对支持粘贴自动格式化
-- 时间工具布局调整：当前时间置顶，解析结果置底
-- 解析结果行支持双击复制 + Toast 提示，移除复制按钮
-- 循环提醒本地缓存：重启后自动恢复剩余倒计时
-- 状态栏图标修复（variableLength）
-- 修复时间戳计算 Int 溢出崩溃（改用 Int64 + 边界校验）
-- 所有按钮热区修复（contentShape + opacity 替代 Color.clear）
-
-### v1.31.0（2026-04-13）
-
-- 合并「当前状态」和「规则配置」为「定时提醒」（内含子 Tab）
-- 新增「信息编码转换」工具（18 种操作，FeHelper 风格）
-- 时间戳工具优化：智能解析器 + 双击复制
-
-### v1.27.0（2026-04-12）
-
-- 新增「Fe 助手」模块：JSON 美化、JSON 比对、信息编码转换、时间(戳)转换
-- 侧边导航栏新增 Fe 助手入口
-
-### v1.22.0（2026-04-12）
-
-- 项目更名：WorkStop → **Magicer**
-- 功能模块调整为左侧纵向导航栏
-- 新增启动执行命令配置
-- 迁移 git 仓库至 magicer
-
-### v1.15.0（2026-04-11）
-
-- 8 套蒙层主题，各主题有独特布局设计
-- 下班模式黑屏动态眼睛（物理碰撞浮动）
-- 蒙层主题预览功能
-
-### v1.6.0（2026-04-11）
-
-- 新增「下班」模式（全屏黑幕 + 防睡眠 + 暂停规则）
-- 新增系统设置（下班密码）
-
-### v1.1.0（2026-04-10）
-
-- 初始发布
-- 多规则并行计时
-- 循环 + 定点两种触发模式
-- 实时状态面板 + Enter 键后门
-- 开机自启支持
+完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 
 ## License
 

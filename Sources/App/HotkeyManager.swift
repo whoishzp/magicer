@@ -2,7 +2,7 @@ import AppKit
 import Combine
 
 extension Notification.Name {
-    static let openFeHelperPanel = Notification.Name("magicer.openFeHelperPanel")
+    static let openFeHelperPanel = Notification.Name("one.openFeHelperPanel")
 }
 
 /// Manages global shortcut registration for off-work toggle and Fe assistant.
@@ -10,7 +10,7 @@ extension Notification.Name {
 /// Strategy (in priority order):
 ///   1. Carbon RegisterEventHotKey — system-wide, no permissions required.
 ///      Used whenever the shortcut has a valid keyCode (recorded after v1.60.0).
-///   2. NSEvent local monitor — fires when Magicer is frontmost.
+///   2. NSEvent local monitor — fires when ONE is frontmost.
 ///      Always installed as a fallback / supplement.
 ///
 /// The previous addGlobalMonitorForEvents approach is removed because it requires

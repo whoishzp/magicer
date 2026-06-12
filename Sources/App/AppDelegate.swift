@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let cmdQQuitThreshold: TimeInterval = 1.5
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        migrateUserDefaultsIfNeeded()
         setupMainMenu()
         setupCmdQHandling()
         menuBar.onOpenSettings = { [weak self] in self?.openSettings() }
@@ -48,7 +49,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        ReminderHTTPServer.shared.stop()
+        CGMcpServer.shared.stop()
+        RuleTimerManager.shared.stop()
         return .terminateNow
+    }
+
+    // MARK: - UserDefaults Migration
+
+    private func migrateUserDefaultsIfNeeded() {
+        let ud = UserDefaults.standard
+        guard !ud.bool(forKey: "one_migration_v2.2_done") else { return }
+
+        let keyMap: [(String, String)] = [
+            ("work_stop_rules_v1",       "one_rules_v1"),
+            ("ws_offwork_password",      "one_offwork_password"),
+            ("ws_startup_commands",      "one_startup_commands"),
+            ("magicer_offwork_shortcut", "one_offwork_shortcut"),
+            ("magicer_fehelper_shortcut","one_fehelper_shortcut"),
+            ("magicer_appearance_mode",  "one_appearance_mode"),
+            ("magicer_startup_last_run", "one_startup_last_run"),
+            ("ws_startup_command_logs",  "one_startup_command_logs"),
+        ]
+
+        for (old, new) in keyMap {
+            if let val = ud.object(forKey: old), ud.object(forKey: new) == nil {
+                ud.set(val, forKey: new)
+            }
+            ud.removeObject(forKey: old)
+        }
+
+        let allKeys = ud.dictionaryRepresentation().keys
+        for key in allKeys where key.hasPrefix("magicer_last_fire_") {
+            let suffix = key.dropFirst("magicer_last_fire_".count)
+            let newKey = "one_last_fire_\(suffix)"
+            if let val = ud.object(forKey: key), ud.object(forKey: newKey) == nil {
+                ud.set(val, forKey: newKey)
+            }
+            ud.removeObject(forKey: key)
+        }
+
+        ud.set(true, forKey: "one_migration_v2.2_done")
+        NSLog("[ONE] UserDefaults migration completed")
     }
 
     // MARK: - Main Menu
@@ -141,7 +183,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.toolbarStyle = .unifiedCompact
         window.contentView = NSHostingView(rootView: SettingsView())
         window.center()
-        window.setFrameAutosaveName("WorkStopSettings")
+        window.setFrameAutosaveName("ONESettings")
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow = window
@@ -151,5 +193,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak window] _ in
             if window?.title != "ONE" { window?.title = "ONE" }
         }
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main
+        ) { _ in Task { @MainActor in CGSessionManager.shared.settingsWindowVisible = true } }
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didMiniaturizeNotification, object: window, queue: .main
+        ) { _ in Task { @MainActor in CGSessionManager.shared.settingsWindowVisible = false } }
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { _ in Task { @MainActor in CGSessionManager.shared.settingsWindowVisible = false } }
     }
 }

@@ -55,7 +55,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
     var isEnabled: Bool
     /// Shell command for `.script` action (`/bin/sh -c`). Ignored for desktop.
     var shellCommand: String
-    /// Directory for per-rule log files (`magicer-{uuid}.log`). Empty = no file logging.
+    /// Directory for per-rule log files (`one-{uuid}.log`). Empty = no file logging.
     var logDirectoryPath: String
     /// Custom label for the overlay close button. Empty = "OK".
     var closeButtonText: String

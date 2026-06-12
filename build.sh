@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-APP_NAME="WorkStop"
-BUNDLE_ID="com.mader.work-stop"
+APP_NAME="ONE"
+BUNDLE_ID="com.mader.one"
 APP_DIR="${APP_NAME}.app"
 BINARY_DIR="${APP_DIR}/Contents/MacOS"
 RESOURCES_DIR="${APP_DIR}/Contents/Resources"

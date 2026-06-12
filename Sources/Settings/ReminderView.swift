@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Merged view for "定时提醒" — combines 当前状态 and 规则配置 with internal sub-tabs.
 struct ReminderView: View {
-    @StateObject private var store = RulesStore.shared
+    @ObservedObject private var store = RulesStore.shared
     @State private var selectedSubTab: SubTab = .status
     @State private var selectedRuleId: UUID?
     @State private var installState: InstallState = .idle

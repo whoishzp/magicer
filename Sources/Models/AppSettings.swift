@@ -30,11 +30,11 @@ enum AppearanceMode: String, CaseIterable, Codable {
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    private let kPassword        = "ws_offwork_password"
-    private let kStartupCmds    = "ws_startup_commands"
-    private let kShortcut        = "magicer_offwork_shortcut"
-    private let kFeHelperShortcut = "magicer_fehelper_shortcut"
-    private let kAppearanceMode  = "magicer_appearance_mode"
+    private let kPassword        = "one_offwork_password"
+    private let kStartupCmds    = "one_startup_commands"
+    private let kShortcut        = "one_offwork_shortcut"
+    private let kFeHelperShortcut = "one_fehelper_shortcut"
+    private let kAppearanceMode  = "one_appearance_mode"
 
     @Published var offWorkPassword: String {
         didSet { UserDefaults.standard.set(offWorkPassword, forKey: kPassword) }
@@ -84,7 +84,7 @@ class AppSettings: ObservableObject {
             startupCommands = []
         }
         // v1.62 及更早版本曾持久化执行记录，已不再使用
-        UserDefaults.standard.removeObject(forKey: "ws_startup_command_logs")
+        UserDefaults.standard.removeObject(forKey: "one_startup_command_logs")
         if let data = UserDefaults.standard.data(forKey: kShortcut),
            let sc = try? JSONDecoder().decode(OffWorkShortcut.self, from: data) {
             offWorkShortcut = sc

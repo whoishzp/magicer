@@ -1,107 +1,253 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to ONE are documented in this file.
+Format follows [Keep a Changelog](https://keepachangelog.com/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-## [1.14.0] - 2026-04-13
-
-### Added
-- 蒙层风格预览功能：鼠标悬停主题卡片时显示眼睛图标，点击弹出模拟蒙层预览窗口
-- 预览窗口展示真实主题色、提醒文字、倒计时和关闭按钮效果
-
-## [1.13.0] - 2026-04-13
-
-### Fixed
-- 密码支持纯空格及任意字符，无字符数限制
-
-## [1.12.0] - 2026-04-13
+## [2.2.0] - 2026-06-12
 
 ### Changed
-- 下班按钮改为红色背景实心按钮样式
-
-## [1.11.0] - 2026-04-13
-
-### Fixed
-- 窗口标题固定为「WorkStop」，不再被 NavigationSplitView 覆盖为规则名称
-- 规则配置的「新增」按钮移至 sidebar 底部面板区域，不再出现在 macOS 窗口标题栏
-
-## [1.10.0] - 2026-04-13
+- **品牌统一**：代码/配置/日志中的 Magicer/WorkStop/ws_ 全部改为 ONE/one_
+- **Package/Binary 名称**：WorkStop → ONE
+- **Bundle ID 统一**：build.sh 与 Info.plist 均为 `com.mader.one`
+- **聊天界面**：改为钉钉风格（蓝色用户气泡 + 浅灰背景 + 白色 AI 气泡）
+- **暗色模式适配**：聊天界面颜色使用 NSColor dynamic provider 自动适配
+- **版本规则**：打包必升版本号，禁止两次发布使用同一版本号
+- **设计规范**：新增架构师视角设计原则和 PRD 设计规范
 
 ### Fixed
-- 密码输入框被黑幕遮挡问题：弹出 NSAlert 前临时隐藏黑幕窗口，密码错误后自动恢复
-
-## [1.9.0] - 2026-04-13
-
-### Fixed
-- 恢复原始自定义 Tab Bar 风格（VStack + 粉色按钮），放弃 macOS 原生 NavigationSplitView toolbar
-- 「系统设置」作为第三个 Tab 按钮嵌入原有 Tab Bar
-- 「下班」按钮常驻 Tab Bar 右侧，红色加粗，进入下班后变为橙色「取消下班」
-
-## [1.8.0] - 2026-04-13
-
-### Fixed
-- 系统设置改为独立 Tab（第三个标签页），解决 sheet 方式不弹出的问题
-- 「下班」按钮改为红色文字，常驻 toolbar 右侧
-
-## [1.7.0] - 2026-04-13
+- **自动滚动**：修复 LazyVStack 底部未渲染消息无法 scrollTo 的问题（加常驻锚点）
+- **MCP 断连保护**：客户端断连时自动 resume continuation，防止内存泄漏
+- **Force unwrap**：修复 5 处生产路径上的强制解包（ReminderHTTPServer/CGMcpServer/OverlayWindow/TimestampView）
+- **下班退出"保持暂停"**：不再错误地禁用所有规则，保留原始快照状态
+- **@StateObject 误用**：ReminderView 改为正确的 @ObservedObject
+- **窗口可见性判断**：改用通知驱动替代硬编码 title 匹配
 
 ### Added
-- 系统设置面板（工具栏新增「系统设置」按钮，以 Sheet 弹出）
-- 下班黑幕退出密码保护：在系统设置中配置密码，Esc 时需验证身份
-- 未设置密码则无需输入，与原有行为兼容
+- **UserDefaults 数据迁移**：升级时自动迁移旧 key 数据，用户配置不丢失
+- **优雅关闭**：退出时显式停止 HTTP/MCP server 和定时器
+- **OverlayManager @MainActor**：显式标注线程安全
+- **MCP 断连取消**：CGSessionManager 新增 cancelPendingCall 方法
+- **CHANGELOG.md**：独立变更日志文件
 
-## [1.6.0] - 2026-04-13
+### Removed
+- **死代码清理**：移除未使用的 debounceTimers 字段
+
+## [2.1.0] - 2026-06-11
 
 ### Added
-- 下班模式：一键触发全屏纯黑遮罩（Swift 原生封装，对应 oblack 逻辑）
-- 下班模式防止系统休眠（NSProcessInfo.beginActivity，替代 caffeinate）
-- 进入下班模式自动暂停所有提醒规则，退出时可选择是否恢复
-- Menu Bar 菜单新增「下班 🌙」快捷项
-- 设置面板工具栏新增「下班」按钮（状态感知，进入后变为「取消下班」）
-- Esc 键退出下班模式，并弹窗询问是否恢复提醒计时
+- **MCP 改名**：key 从 `user-cursor-good` 改为 `one-cursor-good`
+- **自动化安装**：启动自动注册 MCP + 安装 Cursor 规则
+- **微信/钉钉风格**：消息气泡配色 + 输入框内置按钮
+- **输入框草稿管理**：按会话保存/恢复
+- **智能会话切换**：窗口已打开时新消息不强制切换
+- **消息状态**：待发送消息显示等待状态
+- **聊天导出**：单个会话导出为 Markdown
+- **Cmd+V 粘贴图片修复**
+
+## [2.0.1] - 2026-06-11
+
+### Added
+- **CursorGood 原生模块**：内置 MCP HTTP 服务（18880 端口）
+- **Skill 管理**：系统设置中手动导出/安装 Skill 文档
+
+## [1.85.0] - 2026-06-11
 
 ### Changed
-- SettingsView 重构为单一 NavigationSplitView + toolbar Segmented Control
-- 修复「当前状态」与「规则配置」两 Tab 的 header 高度不一致问题
+- **品牌升级**：Magicer → ONE，图标更新
+- **模块排序**：支持拖拽自由排序
 
-## [1.5.0] - 2026-04-13
+## [1.84.0] - 2026-06-11
+
+### Added
+- **回车关闭次数可配置**：每条规则独立设置
+
+## [1.83.0] - 2026-06-10
 
 ### Changed
-- Removed Dock icon (back to Menu Bar only, LSUIElement)
+- **关闭行为分级**：硬锁定选项
 
-## [1.4.0] - 2026-04-13
+## [1.82.0] - 2026-06-10
 
 ### Changed
-- Interval minutes and duration seconds fields now support direct text input alongside the stepper
+- **渐变 + 光晕球背景**：8 个主题重新设计
+- **统一单一排版模板**
 
-## [1.3.0] - 2026-04-13
+## [1.81.0] - 2026-06-10
+
+### Changed
+- **全面重设计 8 套蒙层主题**
+- **关闭按钮迁移至右下角**
+- **可配置关闭按钮文案**
+
+## [1.75.0] - 2026-04-17
+
+### Changed
+- 侧边栏底部新增版本号显示
+- Skill 主题 ID 列表修正
+
+## [1.74.0] - 2026-04-17
+
+### Fixed
+- JSON 美化 5 级 fallback 解析策略
+
+## [1.73.0] - 2026-04-17
+
+### Fixed
+- JSON 美化字符串外字面量转义处理
+
+## [1.72.0] - 2026-04-17
+
+### Fixed
+- JSON 美化转义格式解析兼容
+
+## [1.71.0] - 2026-04-17
 
 ### Added
-- App now shows in both Dock and Menu Bar simultaneously
-- Closing the settings window no longer quits the app (stays running in background)
+- 全屏蒙层 ESC 键快速关闭
 
-## [1.2.0] - 2026-04-13
+## [1.70.0] - 2026-04-17
+
+### Changed
+- JSON 美化解析失败时展示具体错误信息
+
+## [1.69.0] - 2026-04-17
+
+### Fixed
+- JSON 美化兼容转义格式输入
+
+## [1.68.0] - 2026-04-17
+
+### Fixed
+- 新建规则后不再立即弹出蒙层
+
+## [1.67.0] - 2026-04-17
 
 ### Added
-- 4 new light/soft overlay themes: 温柔杏, 少女粉, 马卡龙, 冷库冰蓝
-- ThemeColors now supports light-background themes with adaptive text colors
-- Theme preview cards show correct label colors for both dark and light themes
+- JSON 美化嵌套 JSON 字符串自动解析
 
-## [1.1.0] - 2026-04-13
+## [1.66.0] - 2026-04-17
+
+### Changed
+- 定时提醒改为桌面提醒/定时脚本双模式
+
+## [1.65.0] - 2026-04-16
 
 ### Added
-- Multi-rule parallel timer engine
-- Interval trigger mode (every N minutes)
-- Scheduled trigger mode (fixed daily times, multiple allowed)
-- 4 overlay themes: red-alarm, blue-calm, green-fresh, mono-minimal
-- Full-screen overlay covering all screens and full-screen Spaces
-- Real-time status dashboard with countdown progress bars
-- Enter key backdoor (4 presses within 3s) to force-dismiss overlay
-- Open-at-login via `SMAppService` (macOS 13+)
-- Settings window hides on close (re-opens instantly)
-- Automatic version management via `release.sh`
-- DMG installer packaging
+- 启动命令复制反馈提示条
+- Cursor Good 强制规则
+
+## [1.64.0] - 2026-04-16
+
+### Added
+- 启动命令一键复制
+
+## [1.63.0] - 2026-04-16
+
+### Removed
+- 启动命令执行记录列表（仅保留提示条）
+
+## [1.62.0] - 2026-04-16
+
+### Added
+- 启动命令执行记录 + 手动执行反馈
+
+## [1.61.0] - 2026-04-16
+
+### Added
+- 启动命令一键执行按钮
+
+## [1.60.0] - 2026-04-15
+
+### Added
+- Carbon 全局快捷键（无权限方案）
+
+## [1.59.0] - 2026-04-15
+
+### Changed
+- 全局快捷键 global+local monitor
+- 输入监控权限状态提示
+
+## [1.58.0] - 2026-04-15
+
+### Added
+- 下班模式 + Fe 助手双快捷键
+
+## [1.57.0] - 2026-04-15
+
+### Added
+- Fe 助手工具栏下班快捷按钮
+- 下班快捷键系统设置
+
+## [1.56.0] - 2026-04-14
+
+### Added
+- 嵌入式 HTTP Server（127.0.0.1:18879）
+- Skill 一键安装（Cursor + Claude）
+
+## [1.55.0] - 2026-04-14
+
+### Removed
+- 手动导出 Skill 按钮
+
+## [1.54.0] - 2026-04-14
+
+### Fixed
+- 全屏覆盖根本修复（参考 cursor-stop）
+
+## [1.53.0] - 2026-04-14
+
+### Fixed
+- 全屏蒙层白框
+- MCP 服务 + 时间冲突检测
+
+## [1.52.0] - 2026-04-14
+
+### Fixed
+- 历史规则升级兼容
+- 扩展屏 full-screen Space 覆盖
+- JSON 美化重写为树形视图
+
+## [1.51.0] - 2026-04-14
+
+### Added
+- 一次提醒触发方式
+- 跟进提醒
+- Space 切换焦点恢复
+
+## [1.47.0] - 2026-04-14
+
+### Fixed
+- 循环提醒本地缓存恢复
+- 时间戳 Int 溢出崩溃
+
+## [1.31.0] - 2026-04-13
+
+### Changed
+- 合并定时提醒子 Tab
+- 新增信息编码转换工具
+
+## [1.27.0] - 2026-04-12
+
+### Added
+- Fe 助手模块
+
+## [1.22.0] - 2026-04-12
+
+### Changed
+- WorkStop → Magicer 更名
+
+## [1.15.0] - 2026-04-11
+
+### Added
+- 8 套蒙层主题
+- 下班模式动态眼睛
+
+## [1.6.0] - 2026-04-11
+
+### Added
+- 下班模式
+
+## [1.1.0] - 2026-04-10
+
+### Added
+- 初始发布

@@ -94,6 +94,8 @@ struct CGChatView: View {
 
     // MARK: - Message list
 
+    private static let bottomAnchor = "chat-bottom-anchor"
+
     private func messageList(_ session: CGSession) -> some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: true) {
@@ -102,26 +104,28 @@ struct CGChatView: View {
                         messageRow(msg)
                             .id(msg.id)
                     }
+                    Color.clear.frame(height: 1)
+                        .id(Self.bottomAnchor)
                 }
                 .padding(16)
             }
             .onChange(of: session.messages.count) { _ in
-                scrollToBottom(proxy: proxy, session: session)
+                scrollToBottom(proxy: proxy)
             }
             .onChange(of: mgr.selectedSessionId) { _ in
-                scrollToBottom(proxy: proxy, session: session)
+                scrollToBottom(proxy: proxy)
             }
             .onAppear {
-                scrollToBottom(proxy: proxy, session: session)
+                scrollToBottom(proxy: proxy)
             }
         }
+        .background(Self.chatBg)
     }
 
-    private func scrollToBottom(proxy: ScrollViewProxy, session: CGSession) {
-        guard let lastId = session.messages.last?.id else { return }
+    private func scrollToBottom(proxy: ScrollViewProxy) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             withAnimation(.easeOut(duration: 0.2)) {
-                proxy.scrollTo(lastId, anchor: .bottom)
+                proxy.scrollTo(Self.bottomAnchor, anchor: .bottom)
             }
         }
     }
@@ -161,7 +165,7 @@ struct CGChatView: View {
                     .foregroundColor(.secondary)
             }
             .padding(12)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Self.aiBubbleBg)
             .cornerRadius(10)
 
             Spacer()
@@ -170,7 +174,15 @@ struct CGChatView: View {
 
     // MARK: - User message bubble
 
-    private static let wechatGreen = Color(red: 0.58, green: 0.93, blue: 0.41)
+    private static let chatBg = Color(nsColor: NSColor(name: nil, dynamicProvider: { ap in
+        ap.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(white: 0.13, alpha: 1) : NSColor(white: 0.96, alpha: 1)
+    }))
+    private static let aiBubbleBg = Color(nsColor: NSColor(name: nil, dynamicProvider: { ap in
+        ap.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(white: 0.22, alpha: 1) : .white
+    }))
+    private static let dingtalkBlue = Color(red: 0.09, green: 0.56, blue: 1.0)
 
     private func userMessageView(_ msg: CGMessage) -> some View {
         HStack {
@@ -179,11 +191,11 @@ struct CGChatView: View {
                 if !msg.text.isEmpty {
                     Text(msg.text)
                         .font(.system(size: 13))
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .textSelection(.enabled)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Self.wechatGreen)
+                        .background(Self.dingtalkBlue)
                         .cornerRadius(10)
                 }
                 ForEach(msg.images, id: \.self) { b64 in
@@ -301,7 +313,7 @@ struct CGChatView: View {
                                 .foregroundColor(canSend ? .white : .secondary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 5)
-                                .background(canSend ? Color.blue : Color(NSColor.controlBackgroundColor))
+                                .background(canSend ? Color(red: 0.09, green: 0.56, blue: 1.0) : Color(NSColor.controlBackgroundColor))
                                 .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
@@ -435,7 +447,7 @@ private struct OptionButtonStyle: ButtonStyle {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(configuration.isPressed
-                        ? Color.green.opacity(0.3)
+                        ? Color(red: 0.09, green: 0.56, blue: 1.0).opacity(0.15)
                         : Color(NSColor.controlBackgroundColor))
             .foregroundColor(.primary)
             .cornerRadius(16)

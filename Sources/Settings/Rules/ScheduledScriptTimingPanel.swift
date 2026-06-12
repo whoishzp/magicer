@@ -14,7 +14,7 @@ struct ScheduledScriptTimingPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("按下方触发方式执行 Shell 命令（`/bin/sh -c`）。日志按规则写入目录中的 `magicer-{规则ID}.log`。")
+            Text("按下方触发方式执行 Shell 命令（`/bin/sh -c`）。日志按规则写入目录中的 `one-{规则ID}.log`。")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -84,12 +84,12 @@ struct ScheduledScriptTimingPanel: View {
                 HStack {
                     Text("日志目录")
                         .frame(width: 80, alignment: .leading)
-                    TextField("例如 ~/Library/Logs/MagicerScripts", text: $rule.logDirectoryPath)
+                    TextField("例如 ~/Library/Logs/ONEScripts", text: $rule.logDirectoryPath)
                         .textFieldStyle(.roundedBorder)
                     Button("选择…") { pickLogDirectory() }
                         .buttonStyle(.bordered)
                 }
-                Text("每次执行会在该目录追加写入 `magicer-<规则UUID>.log`。留空则不写文件日志。")
+                Text("每次执行会在该目录追加写入 `one-<规则UUID>.log`。留空则不写文件日志。")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

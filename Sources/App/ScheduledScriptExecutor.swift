@@ -7,7 +7,7 @@ enum ScheduledScriptExecutor {
         guard rule.actionKind == .script else { return }
         let cmd = rule.shellCommand.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cmd.isEmpty else {
-            NSLog("[Magicer] Script rule '\(rule.name)' has empty command; skip.")
+            NSLog("[ONE] Script rule '\(rule.name)' has empty command; skip.")
             return
         }
 
@@ -36,7 +36,7 @@ enum ScheduledScriptExecutor {
                     let dirURL = URL(fileURLWithPath: expanded, isDirectory: true)
                     do {
                         try FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
-                        let logURL = dirURL.appendingPathComponent("magicer-\(rule.id.uuidString).log")
+                        let logURL = dirURL.appendingPathComponent("one-\(rule.id.uuidString).log")
                         try append(
                             to: logURL,
                             ruleName: rule.name,
@@ -46,13 +46,13 @@ enum ScheduledScriptExecutor {
                             stderr: errStr
                         )
                     } catch {
-                        NSLog("[Magicer] Script log write failed for '\(rule.name)': \(error)")
+                        NSLog("[ONE] Script log write failed for '\(rule.name)': \(error)")
                     }
                 } else if code != 0 {
-                    NSLog("[Magicer] Script '\(rule.name)' exited \(code)")
+                    NSLog("[ONE] Script '\(rule.name)' exited \(code)")
                 }
             } catch {
-                NSLog("[Magicer] Script rule '\(rule.name)' failed: \(error)")
+                NSLog("[ONE] Script rule '\(rule.name)' failed: \(error)")
             }
         }
     }

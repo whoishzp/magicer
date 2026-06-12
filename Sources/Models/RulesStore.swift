@@ -11,7 +11,7 @@ class RulesStore: ObservableObject {
         }
     }
 
-    private let key = "work_stop_rules_v1"
+    private let key = "one_rules_v1"
 
     private init() {
         if let data = UserDefaults.standard.data(forKey: key),

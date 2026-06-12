@@ -164,7 +164,7 @@ final class ReminderHTTPServer {
         }
         let bodyData = body.data(using: .utf8) ?? Data()
         let header = "HTTP/1.1 \(status) \(statusText)\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: \(bodyData.count)\r\nConnection: close\r\n\r\n"
-        var response = header.data(using: .utf8)!
+        guard var response = header.data(using: .utf8) else { connection.cancel(); return }
         response.append(bodyData)
         connection.send(content: response, completion: .contentProcessed { _ in connection.cancel() })
     }

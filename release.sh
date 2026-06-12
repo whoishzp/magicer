@@ -2,7 +2,7 @@
 set -e
 
 APP_DISPLAY="ONE"
-BINARY_NAME="WorkStop"
+BINARY_NAME="ONE"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 DMG_NAME="${APP_DISPLAY}-${VERSION}.dmg"
 TMP_DIR="/tmp/${APP_DISPLAY}_dmg_tmp"

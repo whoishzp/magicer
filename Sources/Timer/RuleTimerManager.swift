@@ -6,12 +6,17 @@ class RuleTimerManager {
     private var timers: [UUID: Timer] = [:]
 
     // UserDefaults key prefix for persisting last fire time per rule
-    private static let lastFireKeyPrefix = "magicer_last_fire_"
+    private static let lastFireKeyPrefix = "one_last_fire_"
 
     private init() {}
 
     func start() {
         reload(rules: RulesStore.shared.rules)
+    }
+
+    func stop() {
+        timers.values.forEach { $0.invalidate() }
+        timers.removeAll()
     }
 
     func reload(rules: [ReminderRule]) {

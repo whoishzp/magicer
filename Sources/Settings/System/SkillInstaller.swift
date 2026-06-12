@@ -30,7 +30,7 @@ enum SkillInstaller {
                 name: "定时提醒",
                 description: "AI 可通过 HTTP API（18879 端口）创建和管理全屏蒙层提醒规则",
                 skillFilename: "reminders/SKILL.md",
-                installAction: .copyToSkillsDir(targetDir: "magicer-reminders")
+                installAction: .copyToSkillsDir(targetDir: "one-reminders")
             ),
             Module(
                 id: "cursorgood",

@@ -40,7 +40,7 @@ struct TimestampView: View {
             switch self {
             case .now:       return now
             case .today:     return cal.startOfDay(for: now)
-            case .yesterday: return cal.startOfDay(for: cal.date(byAdding: .day, value: -1, to: now)!)
+            case .yesterday: return cal.startOfDay(for: cal.date(byAdding: .day, value: -1, to: now) ?? now)
             case .thisWeek:
                 var comps = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
                 comps.weekday = cal.firstWeekday

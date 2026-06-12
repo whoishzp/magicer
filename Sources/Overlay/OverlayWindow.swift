@@ -17,6 +17,7 @@ class OverlayNSWindow: NSWindow {
 ///      .transient is critical: "follow the active Space" → shows on full-screen desktop.
 ///   4. NSApp.activate(ignoringOtherApps:) after all windows are shown.
 ///   5. On dismiss, restore .regular policy so the Dock icon returns.
+@MainActor
 class OverlayManager {
     static var windows: [NSWindow] = []
     static var countdownTimer: Timer?
@@ -48,7 +49,7 @@ class OverlayManager {
 
         let theme = ThemeColors.find(rule.themeId)
 
-        // Drop from Dock / Space so overlay windows aren't bound to Magicer's Space.
+        // Drop from Dock / Space so overlay windows aren't bound to ONE's Space.
         NSApp.setActivationPolicy(.accessory)
 
         for screen in NSScreen.screens {
@@ -183,7 +184,7 @@ class OverlayManager {
                 clockLabels.forEach { $0.stringValue = s }
             }
         }
-        RunLoop.main.add(clockTimer!, forMode: .common)
+        if let t = clockTimer { RunLoop.main.add(t, forMode: .common) }
     }
 
     // MARK: - Countdown
@@ -203,6 +204,6 @@ class OverlayManager {
                 }
             }
         }
-        RunLoop.main.add(countdownTimer!, forMode: .common)
+        if let t = countdownTimer { RunLoop.main.add(t, forMode: .common) }
     }
 }

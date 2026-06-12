@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "WorkStop",
+    name: "ONE",
     platforms: [.macOS(.v13)],
     targets: [
         .target(
@@ -14,7 +14,7 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "WorkStop",
+            name: "ONE",
             dependencies: ["CarbonBridge"],
             path: "Sources",
             exclude: ["CarbonBridge"],

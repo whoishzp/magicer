@@ -13,7 +13,7 @@ struct StartupCommandRunOutcome {
 /// Subsequent app relaunches within the same boot session are silently skipped.
 enum StartupCommandRunner {
 
-    private static let kLastRunKey = "magicer_startup_last_run"
+    private static let kLastRunKey = "one_startup_last_run"
 
     /// System boot time derived from process uptime.
     private static var bootTime: Date {
@@ -30,7 +30,7 @@ enum StartupCommandRunner {
     /// Called automatically on app launch — skips if already ran since last boot.
     static func run() {
         guard shouldRunThisBoot else {
-            NSLog("[Magicer] Boot-startup commands skipped (already ran this boot session)")
+            NSLog("[ONE] Boot-startup commands skipped (already ran this boot session)")
             return
         }
         let commands = AppSettings.shared.startupCommands.filter { $0.isEnabled }
@@ -75,10 +75,10 @@ enum StartupCommandRunner {
                     errorDetail: ok ? nil : "退出码 \(code)"
                 )
                 if !ok {
-                    NSLog("[Magicer] Startup command '\(label)' exited with status \(code)")
+                    NSLog("[ONE] Startup command '\(label)' exited with status \(code)")
                 }
             } catch {
-                NSLog("[Magicer] Startup command '\(label)' failed: \(error)")
+                NSLog("[ONE] Startup command '\(label)' failed: \(error)")
                 outcome = StartupCommandRunOutcome(
                     label: label,
                     commandPreview: preview,

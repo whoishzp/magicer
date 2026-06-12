@@ -14,8 +14,6 @@ final class CGSessionManager: ObservableObject {
 
     /// callId → pending continuation (one per in-flight MCP call)
     private var pendingCalls: [String: CGPendingCall] = [:]
-    /// session_id → debounce task (50 ms merge window)
-    private var debounceTimers: [String: Task<Void, Never>] = [:]
     /// session_id → queued user inputs while no pending call exists
     private var queuedInputs: [String: [CGFeedbackResult]] = [:]
 
@@ -144,8 +142,6 @@ final class CGSessionManager: ObservableObject {
             s.messages.append(CGMessage(role: .user, text: text, images: images, deliveryStatus: .delivered))
             s.updatedAt = Date()
             updateSession(s)
-            debounceTimers[sessionId]?.cancel()
-            debounceTimers[sessionId] = nil
             call.continuation.resume(returning: CGFeedbackResult(text: text, images: images))
         } else {
             s.messages.append(CGMessage(role: .user, text: text, images: images, deliveryStatus: .pending))
@@ -154,6 +150,14 @@ final class CGSessionManager: ObservableObject {
             queuedInputs[sessionId, default: []].append(
                 CGFeedbackResult(text: text, images: images))
         }
+    }
+
+    // MARK: - Cancel pending call (client disconnected)
+
+    func cancelPendingCall(callId: String) {
+        guard let call = pendingCalls.removeValue(forKey: callId) else { return }
+        call.continuation.resume(returning: CGFeedbackResult(text: "", images: []))
+        NSLog("[ONE] Cancelled pending call \(callId) (client disconnected)")
     }
 
     // MARK: - Delete session
@@ -202,10 +206,13 @@ final class CGSessionManager: ObservableObject {
         }
     }
 
+    /// Updated by AppDelegate when settings window visibility changes.
+    var settingsWindowVisible = false
+
     // MARK: - Window surface helper
 
     private func isWindowVisible() -> Bool {
-        NSApp.windows.contains { $0.isVisible && $0.title == "ONE" }
+        settingsWindowVisible
     }
 
     private func surfaceWindow() {
