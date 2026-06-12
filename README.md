@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.4.6-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.4.7-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -189,6 +189,10 @@ git tag v1.48.0 && git push origin v1.48.0
 ```
 
 ## 最新版本
+
+### v2.4.7（2026-06-12）
+
+- **CursorGood 规则模板**：新增 Session ID 获取指引，Agent 自动从 agent-transcripts 目录获取当前对话 UUID 作为 session_id
 
 ### v2.4.6（2026-06-12）
 

@@ -46,10 +46,18 @@ enum CGRuleInstaller {
 
         | 参数 | 必填 | 类型 | 说明 |
         | --- | --- | --- | --- |
-        | `session_id` | ✅ | string | 会话 ID（同一轮对话保持一致） |
+        | `session_id` | ✅ | string | 当前对话的 UUID（获取方式见下方） |
         | `message` | ✅ | string | 展示给用户的消息 |
         | `session_topic` | ❌ | string | 会话标题（显示在侧栏） |
         | `predefined_options` | ❌ | string[] | 快捷回复按钮（2-4 个常见选项） |
+
+        ## Session ID 获取（首次调用前必须执行）
+
+        `session_id` 必须使用当前 Cursor 对话的真实 UUID，禁止自行编造。获取方式：
+        1. 在系统上下文中找到 `<agent_transcripts>` 标签内的 agent-transcripts 目录路径
+        2. 列出该目录（`ls -lt` 按时间排序），最新的子目录名（UUID 格式）即为当前对话 ID
+        3. 首次调用 CursorGood 前获取一次，整个对话期间复用同一值
+        4. 若目录为空或无法访问，使用 `fallback-{timestamp}` 作为降级值
 
         ## 核心要求
 
