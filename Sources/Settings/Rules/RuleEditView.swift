@@ -25,7 +25,7 @@ struct RuleEditView: View {
             set: { if !$0 { previewTheme = nil } }
         )) {
             if let t = previewTheme {
-                ThemePreviewView(theme: t, ruleName: rule.name, reminderText: rule.reminderText)
+                ThemePreviewView(theme: t, ruleName: rule.name, reminderText: rule.reminderText, prominentItem: rule.prominentItem)
                     .frame(width: 720, height: 480)
             }
         }
@@ -114,6 +114,21 @@ struct RuleEditView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                 )
+
+            HStack {
+                Text("醒目元素")
+                    .frame(width: 80, alignment: .leading)
+                Picker("", selection: $rule.prominentItem) {
+                    Text("时间").tag(ProminentItem.time)
+                    Text("提示文字").tag(ProminentItem.text)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+                Spacer()
+                Text(rule.prominentItem == .time ? "大时钟居中，文字在下方" : "大文字居中，时钟在下方")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
 
             HStack {
                 Text("关闭按钮")

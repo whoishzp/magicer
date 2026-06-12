@@ -119,7 +119,7 @@ struct ReminderSkillExporter {
                         s += "- followup: \(r.followupMinutes) min after dismissal\n"
                     }
                     s += "- overlay text: \"\(r.reminderText)\"\n"
-                    s += "- duration: \(r.durationSeconds)s · theme: \(r.themeId)\n"
+                    s += "- prominent: **\(r.prominentItem == .text ? "text" : "time")** · duration: \(r.durationSeconds)s · theme: \(r.themeId)\n"
                 } else {
                     let cmd = r.shellCommand.trimmingCharacters(in: .whitespacesAndNewlines)
                     s += "- shell: `\(cmd.isEmpty ? "(empty)" : cmd.replacingOccurrences(of: "`", with: "'"))`\n"
@@ -163,7 +163,8 @@ struct ReminderSkillExporter {
             "themeId": "blue-calm",
             "isEnabled": true,
             "shellCommand": "",
-            "logDirectoryPath": ""
+            "logDirectoryPath": "",
+            "prominentItem": "time"
           }'
         ```
 
@@ -189,6 +190,12 @@ struct ReminderSkillExporter {
         | --- | --- |
         | `desktop` | full-screen overlay reminder |
         | `script` | run `shellCommand` via `/bin/sh -c`; optional `logDirectoryPath` for file logs |
+
+        ### prominentItem values
+        | value | meaning |
+        | --- | --- |
+        | `time` | big clock centered, reminder text below (default) |
+        | `text` | big reminder text centered, clock smaller below |
 
         ### Available themeIds
         `red-alarm` · `blue-calm` · `green-fresh` · `mono-minimal` · `gentle` · `pink` · `macaron` · `frosted`
@@ -248,6 +255,7 @@ struct ReminderSkillExporter {
         s += "```\n\n"
         s += "> triggerMode: `interval`(循环) / `scheduled`(定点) / `once`(一次)\n"
         s += "> actionKind: `desktop`(桌面蒙层) / `script`(定时 Shell，`shellCommand` + 可选 `logDirectoryPath`)\n"
+        s += "> prominentItem: `time`(大时钟居中，默认) / `text`(大文字居中)\n"
         s += "> themeId: `red-alarm` · `blue-calm` · `green-fresh` · `mono-minimal` · `gentle` · `pink` · `macaron` · `frosted`\n\n"
         s += "_Auto-synced by ONE · \(iso.string(from: Date()))_\n"
         return s

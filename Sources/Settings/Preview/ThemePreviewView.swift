@@ -4,6 +4,7 @@ struct ThemePreviewView: View {
     let theme: ThemeColors
     let ruleName: String
     let reminderText: String
+    var prominentItem: ProminentItem = .time
     @Environment(\.dismiss) private var dismiss
 
     @State private var clockString: String = ""
@@ -27,48 +28,11 @@ struct ThemePreviewView: View {
             // ── Gradient + orb background ──────────────────────────────
             overlayBackground
 
-            // ── Content (unified layout) ───────────────────────────────
-            VStack(spacing: 0) {
-                Spacer()
-
-                // Rule name
-                Text(displayName)
-                    .font(.system(size: 13, weight: .light))
-                    .foregroundColor(Color(theme.overlayNameColor))
-
-                // Big clock
-                Text(clockString)
-                    .font(.system(size: 62, weight: swiftUIClockWeight, design: .monospaced))
-                    .foregroundColor(Color(theme.overlayClockColor))
-                    .padding(.top, 10)
-
-                // Date
-                Text(Self.dateString())
-                    .font(.system(size: 14, weight: .light, design: .monospaced))
-                    .foregroundColor(Color(theme.overlayDateColor))
-                    .padding(.top, 8)
-
-                // Divider
-                Rectangle()
-                    .fill(Color(theme.overlayClockColor).opacity(0.15))
-                    .frame(maxWidth: 360, maxHeight: 1)
-                    .padding(.top, 20)
-
-                // Reminder text
-                Text(sampleText)
-                    .font(.system(size: 15, weight: .regular))
-                    .foregroundColor(Color(theme.overlayBodyColor))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 60)
-                    .padding(.top, 18)
-
-                // Countdown placeholder
-                Text("10 秒后可关闭")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(theme.overlayCountdownColor))
-                    .padding(.top, 20)
-
-                Spacer()
+            // ── Content ───────────────────────────────────────────────
+            if prominentItem == .text {
+                textProminentContent
+            } else {
+                timeProminentContent
             }
 
             // ── Overlay controls ───────────────────────────────────────
@@ -116,6 +80,74 @@ struct ThemePreviewView: View {
         .frame(width: 720, height: 480)
         .onAppear { clockString = Self.timeString() }
         .onReceive(clockTimer) { _ in clockString = Self.timeString() }
+    }
+
+    // MARK: - Time-prominent content (default)
+
+    private var timeProminentContent: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            Text(displayName)
+                .font(.system(size: 13, weight: .light))
+                .foregroundColor(Color(theme.overlayNameColor))
+            Text(clockString)
+                .font(.system(size: 62, weight: swiftUIClockWeight, design: .monospaced))
+                .foregroundColor(Color(theme.overlayClockColor))
+                .padding(.top, 10)
+            Text(Self.dateString())
+                .font(.system(size: 14, weight: .light, design: .monospaced))
+                .foregroundColor(Color(theme.overlayDateColor))
+                .padding(.top, 8)
+            Rectangle()
+                .fill(Color(theme.overlayClockColor).opacity(0.15))
+                .frame(maxWidth: 360, maxHeight: 1)
+                .padding(.top, 20)
+            Text(sampleText)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(Color(theme.overlayBodyColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 60)
+                .padding(.top, 18)
+            Text("10 秒后可关闭")
+                .font(.system(size: 11))
+                .foregroundColor(Color(theme.overlayCountdownColor))
+                .padding(.top, 20)
+            Spacer()
+        }
+    }
+
+    // MARK: - Text-prominent content
+
+    private var textProminentContent: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            Text(displayName)
+                .font(.system(size: 13, weight: .light))
+                .foregroundColor(Color(theme.overlayNameColor))
+            Text(sampleText)
+                .font(.system(size: 38, weight: .semibold))
+                .foregroundColor(Color(theme.overlayBodyColor))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+                .padding(.top, 14)
+            Rectangle()
+                .fill(Color(theme.overlayClockColor).opacity(0.15))
+                .frame(maxWidth: 360, maxHeight: 1)
+                .padding(.top, 24)
+            Text(clockString)
+                .font(.system(size: 26, weight: swiftUIClockWeight, design: .monospaced))
+                .foregroundColor(Color(theme.overlayClockColor))
+                .padding(.top, 16)
+            Text(Self.dateString())
+                .font(.system(size: 12, weight: .light, design: .monospaced))
+                .foregroundColor(Color(theme.overlayDateColor))
+                .padding(.top, 6)
+            Text("10 秒后可关闭")
+                .font(.system(size: 11))
+                .foregroundColor(Color(theme.overlayCountdownColor))
+                .padding(.top, 16)
+            Spacer()
+        }
     }
 
     // MARK: - Gradient + orb background

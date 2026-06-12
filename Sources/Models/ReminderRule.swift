@@ -16,6 +16,12 @@ enum TriggerMode: String, Codable {
     case once      = "once"       // 一次：指定时刻触发一次后自动停用
 }
 
+/// Which element is the hero (large, centered) on the overlay.
+enum ProminentItem: String, Codable {
+    case time = "time"   // 大时钟居中（默认）
+    case text = "text"   // 大提示文字居中，时钟缩小
+}
+
 // MARK: - Scheduled Time
 
 struct ScheduledTime: Codable, Identifiable, Equatable {
@@ -61,6 +67,8 @@ struct ReminderRule: Codable, Identifiable, Equatable {
     var closeButtonText: String
     /// Number of consecutive Enter presses within 3 s required to force-show the close button.
     var enterPressThreshold: Int
+    /// Which element is prominent (large, centered) on the overlay.
+    var prominentItem: ProminentItem
 
     // Custom CodingKeys and decoder to maintain backward compatibility.
     // New fields fall back to defaults when absent in stored data.
@@ -69,6 +77,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         case onceDate, followupMinutes
         case durationSeconds, canCloseImmediately, reminderText, themeId, isEnabled
         case shellCommand, logDirectoryPath, closeButtonText, enterPressThreshold
+        case prominentItem
     }
 
     init(from decoder: Decoder) throws {
@@ -88,8 +97,9 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         isEnabled        = try c.decode(Bool.self,            forKey: .isEnabled)
         shellCommand     = (try? c.decode(String.self,        forKey: .shellCommand)) ?? ""
         logDirectoryPath = (try? c.decode(String.self,        forKey: .logDirectoryPath)) ?? ""
-        closeButtonText      = (try? c.decode(String.self, forKey: .closeButtonText)) ?? ""
-        enterPressThreshold  = (try? c.decode(Int.self,    forKey: .enterPressThreshold)) ?? 4
+        closeButtonText      = (try? c.decode(String.self,        forKey: .closeButtonText)) ?? ""
+        enterPressThreshold  = (try? c.decode(Int.self,           forKey: .enterPressThreshold)) ?? 4
+        prominentItem        = (try? c.decode(ProminentItem.self, forKey: .prominentItem)) ?? .time
     }
 
     init(
@@ -109,7 +119,8 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         shellCommand: String = "",
         logDirectoryPath: String = "",
         closeButtonText: String = "",
-        enterPressThreshold: Int = 4
+        enterPressThreshold: Int = 4,
+        prominentItem: ProminentItem = .time
     ) {
         self.id = id
         self.name = name
@@ -128,6 +139,7 @@ struct ReminderRule: Codable, Identifiable, Equatable {
         self.logDirectoryPath = logDirectoryPath
         self.closeButtonText = closeButtonText
         self.enterPressThreshold = enterPressThreshold
+        self.prominentItem = prominentItem
     }
 }
 

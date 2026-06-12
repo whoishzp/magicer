@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.2.3-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -189,10 +189,12 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ## 最新版本
 
-### v2.2.3（2026-06-12）
+### v2.3.0（2026-06-12）
 
-- **图片预览**：聊天中的图片支持点击放大查看
-- **内部变量清理**：dingtalkBlue → accentBlue
+- **醒目元素配置**：蒙层醒目元素可选「时间」或「提示文字」
+- **侧栏折叠**：图标+文字 ↔ 纯图标模式
+- **屏幕拔除修复**：扩展屏断开时蒙层自动重建
+- **图片预览**：聊天图片点击放大查看
 
 完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 

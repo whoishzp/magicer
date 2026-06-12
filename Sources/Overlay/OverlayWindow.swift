@@ -33,35 +33,39 @@ class OverlayManager {
     /// 4 = default; 10 = hard-lock mode (rule.hardLock == true).
     private static var enterPressThreshold = 4
     private static var spaceObserver: NSObjectProtocol?
+    private static var screenObserver: NSObjectProtocol?
     private static var onDismiss: (() -> Void)?
+    private static var currentRule: ReminderRule?
+    private static var countdownRemaining: Int = 0
 
     // MARK: - Public API
 
     static func show(rule: ReminderRule, onDismiss: (() -> Void)? = nil) {
         guard windows.isEmpty else { return }
         OverlayManager.onDismiss = onDismiss
+        currentRule = rule
         closeBtns.removeAll()
         countdownLabels.removeAll()
         clockLabels.removeAll()
         enterPressCount = 0
         lastEnterTime = nil
         enterPressThreshold = rule.enterPressThreshold
+        countdownRemaining = 0
 
         let theme = ThemeColors.find(rule.themeId)
 
-        // Drop from Dock / Space so overlay windows aren't bound to ONE's Space.
         NSApp.setActivationPolicy(.accessory)
 
         for screen in NSScreen.screens {
             windows.append(buildWindow(screen: screen, rule: rule, theme: theme))
         }
 
-        // orderFrontRegardless: forces window to front even when app is not active.
         windows.forEach { $0.orderFrontRegardless() }
         NSApp.activate(ignoringOtherApps: true)
 
         installKeyMonitor()
         installSpaceObserver()
+        installScreenObserver()
         startClock()
 
         let closeDelay = rule.canCloseImmediately ? 0 : rule.durationSeconds
@@ -81,14 +85,19 @@ class OverlayManager {
             NSWorkspace.shared.notificationCenter.removeObserver(obs)
             spaceObserver = nil
         }
+        if let obs = screenObserver {
+            NotificationCenter.default.removeObserver(obs)
+            screenObserver = nil
+        }
         windows.forEach { $0.orderOut(nil) }
         windows.removeAll()
         closeBtns.removeAll()
         countdownLabels.removeAll()
         clockLabels.removeAll()
         enterPressCount = 0
+        currentRule = nil
+        countdownRemaining = 0
 
-        // Restore Dock icon / normal Space behaviour.
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
@@ -108,6 +117,47 @@ class OverlayManager {
             guard !windows.isEmpty else { return }
             windows.forEach { $0.orderFrontRegardless() }
             NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    // MARK: - Screen change observer
+
+    private static func installScreenObserver() {
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            rebuildWindowsForCurrentScreens()
+        }
+    }
+
+    private static func rebuildWindowsForCurrentScreens() {
+        guard let rule = currentRule, !windows.isEmpty else { return }
+        let theme = ThemeColors.find(rule.themeId)
+        let closeVisible = closeBtns.first?.isHidden == false
+
+        clockTimer?.invalidate(); clockTimer = nil
+
+        windows.forEach { $0.orderOut(nil) }
+        windows.removeAll()
+        closeBtns.removeAll()
+        countdownLabels.removeAll()
+        clockLabels.removeAll()
+
+        for screen in NSScreen.screens {
+            windows.append(buildWindow(screen: screen, rule: rule, theme: theme))
+        }
+        windows.forEach { $0.orderFrontRegardless() }
+        NSApp.activate(ignoringOtherApps: true)
+
+        startClock()
+
+        if closeVisible {
+            closeBtns.forEach { $0.isHidden = false }
+            countdownLabels.forEach { $0.stringValue = "" }
+        } else if countdownRemaining > 0 {
+            countdownLabels.forEach { $0.stringValue = "\(countdownRemaining) 秒后可关闭" }
         }
     }
 
@@ -190,13 +240,13 @@ class OverlayManager {
     // MARK: - Countdown
 
     static func startCountdown(seconds: Int) {
-        var remaining = seconds
-        countdownLabels.forEach { $0.stringValue = "\(remaining) 秒后可关闭" }
+        countdownRemaining = seconds
+        countdownLabels.forEach { $0.stringValue = "\(countdownRemaining) 秒后可关闭" }
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-            remaining -= 1
+            countdownRemaining -= 1
             DispatchQueue.main.async {
-                if remaining > 0 {
-                    countdownLabels.forEach { $0.stringValue = "\(remaining) 秒后可关闭" }
+                if countdownRemaining > 0 {
+                    countdownLabels.forEach { $0.stringValue = "\(countdownRemaining) 秒后可关闭" }
                 } else {
                     timer.invalidate(); countdownTimer = nil
                     countdownLabels.forEach { $0.stringValue = "" }

@@ -3,12 +3,18 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [2.2.3] - 2026-06-12
+## [2.3.0] - 2026-06-12
 
 ### Added
+- **醒目元素配置**：每条规则可选择蒙层醒目元素 — 「时间」（大时钟居中，默认）或「提示文字」（大文字居中，时钟缩小至下方）
+- **侧栏折叠**：主侧栏支持折叠/展开（图标+文字 ↔ 纯图标），状态持久化
 - **图片预览**：聊天中的图片支持点击放大查看，全屏遮罩 + 右上角关闭按钮
 
+### Fixed
+- **屏幕拔除蒙层错位**：监听 `didChangeScreenParametersNotification`，扩展屏断开时自动重建蒙层窗口，保留倒计时状态
+
 ### Changed
+- **Skill 文件同步**：新增 `prominentItem` 参数文档
 - **内部变量清理**：dingtalkBlue → accentBlue
 
 ## [2.2.0] - 2026-06-12

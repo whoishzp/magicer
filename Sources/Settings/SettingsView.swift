@@ -7,6 +7,7 @@ struct SettingsView: View {
     // Orderable tabs (excludes appSettings which is always at bottom)
     @State private var tabOrder: [Tab] = SettingsView.loadTabOrder()
     @State private var draggingTab: Tab? = nil
+    @AppStorage("one_sidebar_collapsed") private var sidebarCollapsed: Bool = false
 
     private let feHelperPublisher = NotificationCenter.default
         .publisher(for: .openFeHelperPanel)
@@ -75,9 +76,10 @@ struct SettingsView: View {
 
     // MARK: - Left Sidebar
 
+    private var sidebarWidth: CGFloat { sidebarCollapsed ? 52 : 168 }
+
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Orderable tabs
+        VStack(alignment: sidebarCollapsed ? .center : .leading, spacing: 6) {
             ForEach(tabOrder, id: \.self) { tab in
                 sidebarTabButton(tab)
                     .onDrag {
@@ -97,15 +99,34 @@ struct SettingsView: View {
 
             Spacer()
 
-            // System Settings — always pinned at bottom
             sidebarTabButton(.appSettings)
 
-            versionLabel
+            sidebarCollapseButton
+
+            if !sidebarCollapsed {
+                versionLabel
+            }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, sidebarCollapsed ? 6 : 12)
         .padding(.vertical, 18)
-        .frame(width: 168)
+        .frame(width: sidebarWidth)
         .background(Color(NSColor.controlBackgroundColor))
+        .animation(.easeInOut(duration: 0.2), value: sidebarCollapsed)
+    }
+
+    private var sidebarCollapseButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { sidebarCollapsed.toggle() }
+        } label: {
+            Image(systemName: sidebarCollapsed ? "sidebar.left" : "sidebar.left")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.secondary.opacity(0.6))
+                .frame(width: sidebarCollapsed ? 36 : nil)
+                .frame(maxWidth: sidebarCollapsed ? .infinity : nil)
+                .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
+        .help(sidebarCollapsed ? "展开侧栏" : "折叠侧栏")
     }
 
     private var versionLabel: some View {
@@ -121,20 +142,28 @@ struct SettingsView: View {
         Button {
             withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
         } label: {
-            HStack(spacing: 8) {
+            if sidebarCollapsed {
                 Image(systemName: tab.icon)
-                    .font(.system(size: 13, weight: .medium))
-                    .frame(width: 18)
-                Text(tab.rawValue)
-                    .font(.system(size: 13, weight: .medium))
-                    .lineLimit(1)
-                Spacer()
+                    .font(.system(size: 15, weight: .medium))
+                    .frame(width: 36, height: 32)
+                    .foregroundColor(selectedTab == tab ? .white : .secondary)
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: tab.icon)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 18)
+                    Text(tab.rawValue)
+                        .font(.system(size: 13, weight: .medium))
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .foregroundColor(selectedTab == tab ? .white : .secondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .foregroundColor(selectedTab == tab ? .white : .secondary)
         }
-        .buttonStyle(GlassTabButtonStyle(isSelected: selectedTab == tab, cornerRadius: 8))
+        .buttonStyle(GlassTabButtonStyle(isSelected: selectedTab == tab, cornerRadius: sidebarCollapsed ? 10 : 8))
+        .help(sidebarCollapsed ? tab.rawValue : "")
     }
 
     // MARK: - Off-Work Button

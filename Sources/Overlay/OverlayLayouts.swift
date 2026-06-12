@@ -120,58 +120,107 @@ extension OverlayManager {
     // the gradient+orb background rendered by OverlayRootView.draw().
 
     static func buildUnified(in root: NSView, rule: ReminderRule, theme: ThemeColors, size: CGSize) {
-        // Rule name — small, above clock
-        let nameLbl = lbl(rule.name, size: 16, weight: .light, color: theme.overlayNameColor)
+        switch rule.prominentItem {
+        case .time:
+            buildTimeProminent(in: root, rule: rule, theme: theme)
+        case .text:
+            buildTextProminent(in: root, rule: rule, theme: theme)
+        }
+    }
 
-        // Big clock — hero element (HH:mm:ss)
+    // MARK: - Time-prominent layout (default)
+
+    private static func buildTimeProminent(in root: NSView, rule: ReminderRule, theme: ThemeColors) {
+        let nameLbl = lbl(rule.name, size: 16, weight: .light, color: theme.overlayNameColor)
         let clock = clockLbl(size: 90, weight: theme.clockFontWeight, color: theme.overlayClockColor)
 
-        // Date below clock — static, set once
         let dateFmt = DateFormatter(); dateFmt.dateFormat = "yyyy-MM-dd"
         let dateLbl = lbl(dateFmt.string(from: Date()), size: 20, weight: .light,
                           color: theme.overlayDateColor, mono: true)
 
-        // Thin divider
-        let sep = NSView()
-        sep.wantsLayer = true
-        sep.layer?.backgroundColor = theme.overlayClockColor.withAlphaComponent(0.15).cgColor
-        sep.translatesAutoresizingMaskIntoConstraints = false
-
-        // Reminder body text
+        let sep = makeSeparator(color: theme.overlayClockColor)
         let body = lbl(rule.reminderText, size: 20, weight: .regular,
                        color: theme.overlayBodyColor, wrap: true)
 
-        // Countdown + close button
         let cd  = lbl("", size: 13, weight: .regular, color: theme.overlayCountdownColor)
         let btn = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
 
         [nameLbl, clock, dateLbl, sep, body].forEach { root.addSubview($0) }
 
         NSLayoutConstraint.activate([
-            // clock: centered vertically (slightly above center)
             clock.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             clock.centerYAnchor.constraint(equalTo: root.centerYAnchor, constant: -20),
 
-            // rule name: just above clock
             nameLbl.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             nameLbl.bottomAnchor.constraint(equalTo: clock.topAnchor, constant: -14),
 
-            // date: just below clock
             dateLbl.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             dateLbl.topAnchor.constraint(equalTo: clock.bottomAnchor, constant: 12),
 
-            // separator
             sep.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             sep.widthAnchor.constraint(equalToConstant: 480),
             sep.heightAnchor.constraint(equalToConstant: 1),
             sep.topAnchor.constraint(equalTo: dateLbl.bottomAnchor, constant: 28),
 
-            // reminder text
             body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 640),
             body.topAnchor.constraint(equalTo: sep.bottomAnchor, constant: 24),
         ])
         addCountdown(cd, root: root)
         addCloseButton(btn, root: root)
+    }
+
+    // MARK: - Text-prominent layout
+
+    private static func buildTextProminent(in root: NSView, rule: ReminderRule, theme: ThemeColors) {
+        let nameLbl = lbl(rule.name, size: 16, weight: .light, color: theme.overlayNameColor)
+
+        let body = lbl(rule.reminderText, size: 52, weight: .semibold,
+                       color: theme.overlayBodyColor, wrap: true)
+
+        let sep = makeSeparator(color: theme.overlayClockColor)
+
+        let clock = clockLbl(size: 36, weight: theme.clockFontWeight, color: theme.overlayClockColor)
+
+        let dateFmt = DateFormatter(); dateFmt.dateFormat = "yyyy-MM-dd"
+        let dateLbl = lbl(dateFmt.string(from: Date()), size: 16, weight: .light,
+                          color: theme.overlayDateColor, mono: true)
+
+        let cd  = lbl("", size: 13, weight: .regular, color: theme.overlayCountdownColor)
+        let btn = CloseButtonView(theme: theme, text: buttonText(rule)); btn.isHidden = true
+
+        [nameLbl, body, sep, clock, dateLbl].forEach { root.addSubview($0) }
+
+        NSLayoutConstraint.activate([
+            body.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            body.centerYAnchor.constraint(equalTo: root.centerYAnchor, constant: -30),
+            body.widthAnchor.constraint(lessThanOrEqualToConstant: 800),
+
+            nameLbl.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            nameLbl.bottomAnchor.constraint(equalTo: body.topAnchor, constant: -18),
+
+            sep.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            sep.widthAnchor.constraint(equalToConstant: 480),
+            sep.heightAnchor.constraint(equalToConstant: 1),
+            sep.topAnchor.constraint(equalTo: body.bottomAnchor, constant: 32),
+
+            clock.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            clock.topAnchor.constraint(equalTo: sep.bottomAnchor, constant: 20),
+
+            dateLbl.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            dateLbl.topAnchor.constraint(equalTo: clock.bottomAnchor, constant: 8),
+        ])
+        addCountdown(cd, root: root)
+        addCloseButton(btn, root: root)
+    }
+
+    // MARK: - Shared separator
+
+    private static func makeSeparator(color: NSColor) -> NSView {
+        let sep = NSView()
+        sep.wantsLayer = true
+        sep.layer?.backgroundColor = color.withAlphaComponent(0.15).cgColor
+        sep.translatesAutoresizingMaskIntoConstraints = false
+        return sep
     }
 }
