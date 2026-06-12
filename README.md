@@ -2,7 +2,7 @@
 
 > AI 原生效率助理 — macOS App（原 Magicer）
 
-[![Version](https://img.shields.io/badge/version-2.2.1-blue.svg)](https://github.com/whoishzp/one/releases)
+[![Version](https://img.shields.io/badge/version-2.2.3-blue.svg)](https://github.com/whoishzp/one/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -189,12 +189,10 @@ git tag v1.48.0 && git push origin v1.48.0
 
 ## 最新版本
 
-### v2.2.1（2026-06-12）
+### v2.2.3（2026-06-12）
 
-- **品牌统一**：代码/配置/日志全量改为 ONE，Package/Binary 名改为 ONE
-- **聊天窗口风格优化**：重新设计消息气泡配色，支持暗色模式自动适配
-- **架构治理**：修复 MCP 断连泄漏、force unwrap、下班退出 bug、@StateObject 误用等 11 项问题
-- **UserDefaults 迁移**：升级时自动迁移旧 key 数据
+- **图片预览**：聊天中的图片支持点击放大查看
+- **内部变量清理**：dingtalkBlue → accentBlue
 
 完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
 

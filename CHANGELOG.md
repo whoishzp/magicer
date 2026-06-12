@@ -3,6 +3,14 @@
 All notable changes to ONE are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.3] - 2026-06-12
+
+### Added
+- **图片预览**：聊天中的图片支持点击放大查看，全屏遮罩 + 右上角关闭按钮
+
+### Changed
+- **内部变量清理**：dingtalkBlue → accentBlue
+
 ## [2.2.0] - 2026-06-12
 
 ### Changed

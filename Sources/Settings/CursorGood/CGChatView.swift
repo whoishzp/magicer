@@ -11,6 +11,7 @@ struct CGChatView: View {
     @State private var lastSessionId: String? = nil
     @AppStorage("cgInputHeight") private var inputHeight: Double = 120
     @State private var dragStartHeight: Double = 0
+    @State private var previewImage: NSImage? = nil
 
     private var session: CGSession? {
         guard let id = mgr.selectedSessionId else { return nil }
@@ -22,19 +23,26 @@ struct CGChatView: View {
     }
 
     var body: some View {
-        Group {
-            if let session = session {
-                VStack(spacing: 0) {
-                    chatHeader(session)
-                    Divider()
-                    messageList(session)
-                    Divider()
-                    inputArea
+        ZStack {
+            Group {
+                if let session = session {
+                    VStack(spacing: 0) {
+                        chatHeader(session)
+                        Divider()
+                        messageList(session)
+                        Divider()
+                        inputArea
+                    }
+                } else {
+                    emptyState
                 }
-            } else {
-                emptyState
+            }
+
+            if let img = previewImage {
+                imagePreviewOverlay(img)
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: previewImage != nil)
         .onAppear {
             installPasteMonitor()
             lastSessionId = mgr.selectedSessionId
@@ -182,7 +190,7 @@ struct CGChatView: View {
         ap.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
             ? NSColor(white: 0.22, alpha: 1) : .white
     }))
-    private static let dingtalkBlue = Color(red: 0.09, green: 0.56, blue: 1.0)
+    private static let accentBlue = Color(red: 0.09, green: 0.56, blue: 1.0)
 
     private func userMessageView(_ msg: CGMessage) -> some View {
         HStack {
@@ -195,7 +203,7 @@ struct CGChatView: View {
                         .textSelection(.enabled)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Self.dingtalkBlue)
+                        .background(Self.accentBlue)
                         .cornerRadius(10)
                 }
                 ForEach(msg.images, id: \.self) { b64 in
@@ -206,6 +214,10 @@ struct CGChatView: View {
                             .scaledToFit()
                             .frame(maxWidth: 200)
                             .cornerRadius(8)
+                            .onTapGesture { previewImage = img }
+                            .onHover { inside in
+                                if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+                            }
                     }
                 }
                 HStack(spacing: 4) {
@@ -313,7 +325,7 @@ struct CGChatView: View {
                                 .foregroundColor(canSend ? .white : .secondary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 5)
-                                .background(canSend ? Color(red: 0.09, green: 0.56, blue: 1.0) : Color(NSColor.controlBackgroundColor))
+                                .background(canSend ? Self.accentBlue : Color(NSColor.controlBackgroundColor))
                                 .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
@@ -435,6 +447,37 @@ struct CGChatView: View {
                 .foregroundColor(.secondary)
             Spacer()
         }
+    }
+
+    // MARK: - Image preview overlay
+
+    private func imagePreviewOverlay(_ img: NSImage) -> some View {
+        ZStack {
+            Color.black.opacity(0.75)
+                .ignoresSafeArea()
+                .onTapGesture { previewImage = nil }
+
+            Image(nsImage: img)
+                .resizable()
+                .scaledToFit()
+                .padding(32)
+                .onTapGesture { previewImage = nil }
+
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { previewImage = nil }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(16)
+                }
+                Spacer()
+            }
+        }
+        .transition(.opacity)
     }
 }
 
